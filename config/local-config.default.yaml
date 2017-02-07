@@ -1,4 +1,6 @@
 deviceId: 
+iotHostname:
 ffmpegOverridePath:
+inputSourceOverride:
 tmpDirectory: 
 loggingPath: 

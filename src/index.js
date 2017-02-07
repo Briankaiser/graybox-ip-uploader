@@ -14,7 +14,10 @@ const localConfigReader = require('./local-config-reader');
 
   function receivedEncoderMessage(msg)
   {
-    console.log(msg);
+    console.log("encoder", msg);
+  }
+  function receivedIotShadowMessage(msg) {
+    console.log("iot-shadow", msg);
   }
 
 
@@ -41,6 +44,11 @@ const localConfigReader = require('./local-config-reader');
       let encoderProcess = childProcessDebug.fork('./encoder/index.js');
       encoderProcess.on('message', receivedEncoderMessage);
       childProcesses.push(encoderProcess);
+
+      //start aws iot shadow
+      let iotShadowProcess = childProcessDebug.fork('./iot-shadow/index.js');
+      iotShadowProcess.on('message', receivedIotShadowMessage);
+      childProcesses.push(iotShadowProcess);
 
       //start monitoring process
   }

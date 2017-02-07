@@ -56,3 +56,5 @@ typings/
 .env
 
 config/local-config.yaml
+certs/*.pem
+certs/*.key

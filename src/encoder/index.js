@@ -3,6 +3,7 @@ const bunyan = require('bunyan');
 const path = require('path');
 const os = require('os');
 const mkdirp = require('mkdirp');
+const _ = require('lodash');
 
 (function() {
   let localConfig = {};
@@ -10,10 +11,18 @@ const mkdirp = require('mkdirp');
   let ffmpegProcess;
   let logger;
 
+  function getInput(config, state) {
+    if(!_.isEmpty(config.inputSourceOverride)) {
+      return config.inputSourceOverride;
+    } else {
+      return state.rtmpStreamAddress;
+    }
+  }
+
   function startEncoder(){
     //start ffmpeg
     const outputFile = path.join(localConfig.tmpDirectory, '/video/', 'output%Y-%m-%d_%H-%M-%S.mp4');
-    const inputFile = 'rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov';
+    const inputFile = getInput(localConfig, deviceState);
     ffmpegProcess = ffmpeg(inputFile)
                           .format('segment')
                           .outputOptions([
@@ -53,7 +62,7 @@ const mkdirp = require('mkdirp');
     }
   }
 
-  function Init(config) {
+  function init(config) {
     localConfig = config;
     logger = bunyan.createLogger({
       name: 'encoder-log',
@@ -95,7 +104,7 @@ const mkdirp = require('mkdirp');
     if (!msg) return;
 
     if (msg.type === 'Init') {
-      Init(msg.payload);
+      init(msg.payload);
     } else if (msg.type === 'DeviceStateChanged') {
       ProcessUpdatedDeviceState(msg.payload);
     }
