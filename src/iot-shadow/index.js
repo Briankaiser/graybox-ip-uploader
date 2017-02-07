@@ -54,6 +54,10 @@ const _ = require('lodash');
     thingShadows.on('delta', function(thingName, stateObject) {
       logger.info('aws iot delta', thingName, stateObject);
       //TODO: modify the device state and broadcast
+      process.send({
+          type: 'DeviceStateChanged',
+          payload: _.merge(deviceState, stateObject.state),
+      });
     });
     thingShadows.on('status', function(thingName, statusType, clientToken, stateObject) {
       logger.info('awsstatus', thingName, statusType, clientToken, stateObject);

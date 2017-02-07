@@ -18,6 +18,17 @@ const localConfigReader = require('./local-config-reader');
   }
   function receivedIotShadowMessage(msg) {
     console.log("iot-shadow", msg);
+
+    //if new device state - broadcast it to everyone
+    if(msg.type === 'DeviceStateChanged') {
+      _.each(childProcesses, function(cp) {
+        if(!cp.connected) return;
+        cp.send({
+          type:'DeviceStateChanged',
+          payload: msg.payload
+        });
+      }); 
+    }
   }
 
 
@@ -64,6 +75,7 @@ const localConfigReader = require('./local-config-reader');
   function mainInitIoT() {
       //setup AWS IoT and get initial state
       //send fake device state for now
+      return;
       setTimeout(function() {
         _.each(childProcesses, function(cp) {
           if(!cp.connected) return;
