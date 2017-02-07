@@ -1,0 +1,25 @@
+{
+  "name": "graybox-ip-uploader",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": {
+    "url": "https://github.com/Briankaiser/graybox-ip-uploader",
+    "type": "git"
+  },
+  "author": "Brian Kaiser",
+  "license": "MIT",
+  "dependencies": {
+    "aws-iot-device-sdk": "^1.0.14",
+    "bunyan": "^1.8.5",
+    "child-process-debug": "^0.0.7",
+    "deferred": "^0.7.5",
+    "fluent-ffmpeg": "^2.1.0",
+    "js-yaml": "^3.7.0",
+    "lodash": "^4.17.4",
+    "mkdirp": "^0.5.1",
+    "yargs": "^6.6.0"
+  },
+  "devDependencies": {
+    "eslint": "^3.15.0"
+  }
+}
