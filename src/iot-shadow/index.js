@@ -52,20 +52,19 @@ const _ = require('lodash');
       logger.info('aws iot message', topic, payload);
     });
     thingShadows.on('delta', function(thingName, stateObject) {
-      logger.info('aws iot delta', thingName, stateObject);
-      //TODO: modify the device state and broadcast
+      logger.debug('aws iot delta', thingName, stateObject);
       process.send({
           type: 'DeviceStateChanged',
-          payload: _.merge(deviceState, stateObject.state),
+          payload: _.merge({}, deviceState, stateObject.state),
       });
     });
     thingShadows.on('status', function(thingName, statusType, clientToken, stateObject) {
-      logger.info('awsstatus', thingName, statusType, clientToken, stateObject);
+      logger.debug('awsstatus', thingName, statusType, clientToken, stateObject);
       if(statusType === 'accepted' && thingName === localConfig.deviceId) {
         //set device state
         process.send({
           type: 'DeviceStateChanged',
-          payload: stateObject.state.desired,
+          payload: _.merge({}, stateObject.state.desired),
         });
       }
     });
@@ -78,13 +77,14 @@ const _ = require('lodash');
       deviceId: localConfig.deviceId,
       streams: [{
           type: 'rotating-file',
+          level: 'info',
           path: path.join(config.loggingPath, 'iot-log.log'),
           period: '1d',   // daily rotation
           count: 3        // keep 3 back copies
       },
       {
         stream: process.stderr,
-        level: "debug"
+        level: 'debug'
       }]
     });
 

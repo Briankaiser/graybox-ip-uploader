@@ -69,13 +69,14 @@ const _ = require('lodash');
       deviceId: localConfig.deviceId,
       streams: [{
           type: 'rotating-file',
+          level: 'info',
           path: path.join(config.loggingPath, 'encoder-log.log'),
           period: '1d',   // daily rotation
           count: 3        // keep 3 back copies
       },
       {
         stream: process.stderr,
-        level: "debug"
+        level: 'debug'
       }]
     });
     mkdirp(path.join(localConfig.tmpDirectory, '/video/'));

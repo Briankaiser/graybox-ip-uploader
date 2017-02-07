@@ -17,8 +17,6 @@ const localConfigReader = require('./local-config-reader');
     console.log("encoder", msg);
   }
   function receivedIotShadowMessage(msg) {
-    console.log("iot-shadow", msg);
-
     //if new device state - broadcast it to everyone
     if(msg.type === 'DeviceStateChanged') {
       _.each(childProcesses, function(cp) {
@@ -39,13 +37,14 @@ const localConfigReader = require('./local-config-reader');
         deviceId: localConfig.deviceId,
         streams: [{
             type: 'rotating-file',
+            level: 'info',
             path: path.join(config.loggingPath, 'main-log.log'),
             period: '1d',   // daily rotation
             count: 3        // keep 3 back copies
         },
         {
           stream: process.stderr,
-          level: "debug"
+          level: 'debug'
         }]
       });
   }
