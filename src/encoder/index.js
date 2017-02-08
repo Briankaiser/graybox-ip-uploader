@@ -10,6 +10,7 @@ const _ = require('lodash');
   let deviceState = {};
   let ffmpegProcess;
   let logger;
+  let ignoreNextError = false;
 
   function getInput(config, state) {
     if(!_.isEmpty(config.inputSourceOverride)) {
@@ -19,10 +20,11 @@ const _ = require('lodash');
     }
   }
 
-  function startEncoder(){
+  function startEncoder() {
     //start ffmpeg
     const outputFile = path.join(localConfig.tmpDirectory, '/video/', 'output%Y-%m-%d_%H-%M-%S.mp4');
     const inputFile = getInput(localConfig, deviceState);
+    ignoreNextError = false;
     ffmpegProcess = ffmpeg(inputFile)
                           .format('segment')
                           .outputOptions([
@@ -41,6 +43,11 @@ const _ = require('lodash');
                             },'ffmpeg started.')
                           })
                           .on('error', function(err) {
+                            if(ignoreNextError) {
+                              ignoreNextError = false;
+                              return;
+                            }
+
                             logger.info({
                               input: inputFile,
                               output: outputFile,
@@ -57,6 +64,7 @@ const _ = require('lodash');
   }
   function stopEncoder() {
     if(!!ffmpegProcess) {
+      ignoreNextError = true;
       ffmpegProcess.kill();
       ffmpegProcess = null;
     }
@@ -100,8 +108,7 @@ const _ = require('lodash');
     }
   }
 
-  process.on('message', function(msg)
-  {
+  process.on('message', function(msg) {
     if (!msg) return;
 
     if (msg.type === 'Init') {
@@ -113,8 +120,7 @@ const _ = require('lodash');
 
 
 
-  let statusInterval = setInterval(function()
-  {
+  let statusInterval = setInterval(function() {
     process.send(buildEncoderStatusMessage());
   }, 10000);
 

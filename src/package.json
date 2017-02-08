@@ -10,6 +10,7 @@
   "license": "MIT",
   "dependencies": {
     "aws-iot-device-sdk": "^1.0.14",
+    "aws-sdk": "^2.10.0",
     "bunyan": "^1.8.5",
     "child-process-debug": "^0.0.7",
     "deferred": "^0.7.5",

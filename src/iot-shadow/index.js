@@ -12,7 +12,7 @@ const _ = require('lodash');
   let connected = false;
 
   function initIotShadowConnection() {
-    //TODO: very host, keys exist, deviceId exists
+    //TODO: verify host, keys exist, deviceId exists
 
     console.log(path.resolve('../certs', 'thing.private.key'));
     const thingShadows = thingShadow({
@@ -36,7 +36,7 @@ const _ = require('lodash');
       connected = true;
       setTimeout(function(){
         thingShadows.get(localConfig.deviceId); //trigger an initial get
-      }, 1000);
+      }, 2000);
     });
     thingShadows.on('close', function() {
       logger.info('aws iot closed');
@@ -47,6 +47,10 @@ const _ = require('lodash');
       thingShadows.register(localConfig.deviceId, {
         persistentSubscribe: true
       });
+      connected = true;
+      setTimeout(function(){
+        thingShadows.get(localConfig.deviceId); //trigger a refresh get
+      }, 2000);
     });
     thingShadows.on('message', function(topic, payload) {
       logger.info('aws iot message', topic, payload);
@@ -103,8 +107,7 @@ const _ = require('lodash');
     }
   }
 
-  process.on('message', function(msg)
-  {
+  process.on('message', function(msg) {
     if (!msg) return;
 
     if (msg.type === 'Init') {
@@ -116,8 +119,7 @@ const _ = require('lodash');
 
 
 
-  let statusInterval = setInterval(function()
-  {
+  let statusInterval = setInterval(function() {
     process.send(buildIotStatusMessage());
   }, 10000);
 

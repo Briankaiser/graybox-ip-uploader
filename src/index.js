@@ -1,4 +1,3 @@
-const fork = require('child_process').fork;
 const childProcessDebug = require('child-process-debug');
 const bunyan = require('bunyan');
 const path = require('path');
@@ -12,11 +11,14 @@ const localConfigReader = require('./local-config-reader');
   let localConfig;
   let logger;
 
-  function receivedEncoderMessage(msg)
-  {
+  function onEncoderMessage(msg) {
     console.log("encoder", msg);
   }
-  function receivedIotShadowMessage(msg) {
+  function onUploaderMessage(msg) {
+    console.log('uploader', msg);
+  }
+  function onIotShadowMessage(msg) {
+    console.log('iot-shadow', msg);
     //if new device state - broadcast it to everyone
     if(msg.type === 'DeviceStateChanged') {
       _.each(childProcesses, function(cp) {
@@ -52,15 +54,20 @@ const localConfigReader = require('./local-config-reader');
       //create child processes
       //spawn the encoder
       let encoderProcess = childProcessDebug.fork('./encoder/index.js');
-      encoderProcess.on('message', receivedEncoderMessage);
+      encoderProcess.on('message', onEncoderMessage);
       childProcesses.push(encoderProcess);
 
       //start aws iot shadow
       let iotShadowProcess = childProcessDebug.fork('./iot-shadow/index.js');
-      iotShadowProcess.on('message', receivedIotShadowMessage);
+      iotShadowProcess.on('message', onIotShadowMessage);
       childProcesses.push(iotShadowProcess);
 
       //start monitoring process
+
+      //start uploader process
+      let uploaderProcess = childProcessDebug.fork('./uploader/index.js');
+      uploaderProcess.on('message', onUploaderMessage);
+      childProcesses.push(uploaderProcess);
   }
   function mainInitProcesses() {
       //init the processes

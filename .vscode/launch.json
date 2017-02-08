@@ -29,6 +29,18 @@
         "localRoot": "${workspaceRoot}",
         "remoteRoot": null
     },
+        {
+        "name": "Attach to uploader",
+        "type": "node",
+        "request": "attach",
+        "port": 5861,
+        "address": "localhost",
+        "restart": false,
+        "sourceMaps": false,
+        "outFiles": [],
+        "localRoot": "${workspaceRoot}",
+        "remoteRoot": null
+    },
     {
       "type": "node2",
       "request": "launch",
