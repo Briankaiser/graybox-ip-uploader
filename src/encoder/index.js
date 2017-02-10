@@ -83,7 +83,7 @@ const _ = require('lodash');
           count: 3        // keep 3 back copies
       },
       {
-        stream: process.stderr,
+        stream: process.stdout,
         level: 'debug'
       }]
     });

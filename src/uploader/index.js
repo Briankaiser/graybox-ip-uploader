@@ -129,7 +129,7 @@ const VALID_EXT = ['.mp4', '.ts'];
           count: 3        // keep 3 back copies
       },
       {
-        stream: process.stderr,
+        stream: process.stdout,
         level: 'debug'
       }]
     });
