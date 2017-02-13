@@ -33,7 +33,7 @@ const writeFileAsync = promisify(fs.writeFile);
       delay: 4000,
       protocol: 'mqtts',
       host: localConfig.iotHostname,
-      debug: false,
+      debug: true,
     });
     thingShadows.register(localConfig.deviceId, {
         persistentSubscribe: true
@@ -111,6 +111,12 @@ const writeFileAsync = promisify(fs.writeFile);
 
     }, 30000);
   }
+  function PostCompiledStatusToIoT(payload) {
+    if(!connected) return;
+
+    logger.info(payload, 'status message');
+    thingShadows.publish('device-status', JSON.stringify(payload));
+  }
 
   function init(config) {
     localConfig = config;
@@ -158,6 +164,8 @@ const writeFileAsync = promisify(fs.writeFile);
       init(msg.payload);
     } else if (msg.type === 'DeviceStateChanged') {
       ProcessUpdatedDeviceState(msg.payload);
+    } else if(msg.type === 'CompiledStatus') {
+      PostCompiledStatusToIoT(msg.payload);
     }
   })
 

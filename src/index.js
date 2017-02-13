@@ -11,14 +11,51 @@ const localConfigReader = require('./local-config-reader');
   let localConfig;
   let logger;
 
+  function FindChildProcess(processes, toFindString) { 
+      return _.find(processes, function(p) {
+        return _.some(p.spawnargs, function(sa) {
+          return sa.indexOf(toFindString) > -1;
+        });
+      });
+  }
+  function ProcessStatusUpdate(msg) {
+    if(msg.type !== 'StatusUpdate') return;
+      const statusProcess = FindChildProcess(childProcesses, 'status');
+      if(!statusProcess.connected) return;
+
+      statusProcess.send({
+        type:'StatusUpdate',
+        payload: msg.payload,
+      });
+  }
   function onEncoderMessage(msg) {
-    console.log("encoder", msg);
+    if(msg.type === 'StatusUpdate') {
+      ProcessStatusUpdate(msg);
+      return;
+    }
   }
   function onUploaderMessage(msg) {
-    console.log('uploader', msg);
+    if(msg.type === 'StatusUpdate') {
+      ProcessStatusUpdate(msg);
+      return;
+    }
+  }
+  function onStatusMessage(msg) {
+    if(msg.type !== 'CompiledStatus') return;
+
+    //take the status message and push to IoT
+    //TODO: also make available to bluetooth config util??
+    const iotProcess = FindChildProcess(childProcesses, 'iot');
+    iotProcess.send({
+      type: 'CompiledStatus',
+      payload: msg.payload,
+    });
   }
   function onIotShadowMessage(msg) {
-    console.log('iot-shadow', msg);
+    if(msg.type === 'StatusUpdate') {
+      ProcessStatusUpdate(msg);
+      return;
+    }
     //if new device state - broadcast it to everyone
     if(msg.type === 'DeviceStateChanged') {
       _.each(childProcesses, function(cp) {
@@ -63,6 +100,9 @@ const localConfigReader = require('./local-config-reader');
       childProcesses.push(iotShadowProcess);
 
       //start monitoring process
+      let statusProcess = childProcessDebug.fork('./status/index.js');
+      statusProcess.on('message', onStatusMessage);
+      childProcesses.push(statusProcess);
 
       //start uploader process
       let uploaderProcess = childProcessDebug.fork('./uploader/index.js');
@@ -78,29 +118,12 @@ const localConfigReader = require('./local-config-reader');
         });
       });
   }
-  function mainInitIoT() {
-      //setup AWS IoT and get initial state
-      //send fake device state for now
-      return;
-      setTimeout(function() {
-        _.each(childProcesses, function(cp) {
-          if(!cp.connected) return;
-          cp.send({
-            type:'DeviceStateChanged',
-            payload: {
-              encoderEnabled: true,
-            }
-          });
-        });
-      }, 5000);
-  }
 
   // main process run path
   localConfigReader.load()
     .then(mainInitWithConfig)
     .then(mainCreateChildProcesses)
     .then(mainInitProcesses)
-    .then(mainInitIoT)
     .done(function() {
       }, function(err) {
         if(logger) {
@@ -109,18 +132,5 @@ const localConfigReader = require('./local-config-reader');
           console.log(err);
         }
       });
-
-
-
-  //get local IP information. Camera info? probably on a timer/loop. setInterval(). actually just report device status in general here
-
-  //status ping using SetInterval. it writes a log message with status (and back to IoT) on every ping
-  //as it received IPC from other nodes it keeps 'current' status
-
-  //spawn the uploader process
-
-  //spawn the cleanup process
-
-  //listen for messages and re-broadcast to child processes
 
 })()
