@@ -18,10 +18,10 @@
       "port": 5858
     },
     {
-        "name": "Attach child",
+        "name": "Attach to IoT",
         "type": "node",
         "request": "attach",
-        "port": 5859,
+        "port": 5860,
         "address": "localhost",
         "restart": false,
         "sourceMaps": false,
