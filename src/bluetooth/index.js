@@ -8,7 +8,7 @@ let bleno
 try {
   bleno = require('bleno')
 } catch (e) {
-  console.log('failed to load bleno for bluetooth');
+  console.log('failed to load bleno for bluetooth', e)
 }
 
 const promisify = deferred.promisify
@@ -25,7 +25,7 @@ const promisify = deferred.promisify
       logger.warn('bleno not loaded')
       return
     }
-    
+
     bleno.on('stateChange', function (state) {
       console.log('on -> stateChange: ' + state)
 
