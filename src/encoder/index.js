@@ -59,6 +59,7 @@ const _ = require('lodash');
                               input: inputFile,
                               output: outputFile,
                             },'ffmpeg ended.')
+                            ffmpegProcess = null;
                           })
                           .save(outputFile);
   }

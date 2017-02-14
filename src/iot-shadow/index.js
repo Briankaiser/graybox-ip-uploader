@@ -113,9 +113,9 @@ const writeFileAsync = promisify(fs.writeFile);
     }, 30000);
   }
   function PostCompiledStatusToIoT(payload) {
+    logger.info(payload, 'status message');
     if(!connected) return;
 
-    logger.info(payload, 'status message');
     thingShadows.publish('device-status', JSON.stringify(payload));
   }
 
