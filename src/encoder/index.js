@@ -43,6 +43,7 @@ const _ = require('lodash');
                             },'ffmpeg started.')
                           })
                           .on('error', function(err) {
+                            //if graceful exit (ie remote encoder stop)
                             if(ignoreNextError) {
                               ignoreNextError = false;
                               return;
@@ -53,6 +54,9 @@ const _ = require('lodash');
                               output: outputFile,
                               error: err,
                             },'ffmpeg error')
+                            // if ffmpeg errors out it will never restart
+                            // so we might as well kill the process so it restarts
+                            process.exit(1);
                           })
                           .on('end', function() {
                             logger.info({
@@ -62,7 +66,6 @@ const _ = require('lodash');
                             // if ffmpeg ends then it will never restart
                             // so we might as well kill the process so it restarts
                             process.exit(1);
-                            ffmpegProcess = null;
                           })
                           .save(outputFile);
   }
