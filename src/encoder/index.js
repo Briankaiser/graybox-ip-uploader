@@ -54,18 +54,27 @@ const _ = require('lodash');
                               output: outputFile,
                               error: err,
                             },'ffmpeg error')
-                            // if ffmpeg errors out it will never restart
-                            // so we might as well kill the process so it restarts
-                            process.exit(1);
+                            //attempt to restart ffmpeg if applicable
+                            if(deviceState.encoderEnabled) {
+                              ffmpegProcess = null;
+                              setTimeout(function() {
+                                startEncoder();
+                              }, 5000);
+                            }
                           })
                           .on('end', function() {
                             logger.info({
                               input: inputFile,
                               output: outputFile,
                             },'ffmpeg ended.')
-                            // if ffmpeg ends then it will never restart
-                            // so we might as well kill the process so it restarts
-                            process.exit(1);
+
+                            //attempt to restart ffmpeg if applicable
+                            if(deviceState.encoderEnabled) {
+                              ffmpegProcess = null;
+                              setTimeout(function() {
+                                startEncoder();
+                              }, 5000);
+                            }
                           })
                           .save(outputFile);
   }
