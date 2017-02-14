@@ -92,6 +92,18 @@ const localConfigReader = require('./local-config-reader');
       //spawn the encoder
       let encoderProcess = childProcessDebug.fork('./encoder/index.js');
       encoderProcess.on('message', onEncoderMessage);
+      //on failure - restart
+      encoderProcess.on('exit', function(exitCode, signal) {
+        _.pull(childProcesses, encoderProcess);
+        //wait 5s and restart
+        setTimeout(function() {
+          logger.info('restarting encoder process');
+          let newEncoderProcess = childProcessDebug.fork('./encoder/index.js')
+          newEncoderProcess.on('message', onEncoderMessage);
+          childProcesses.push(newEncoderProcess);
+        }, 5000);
+
+      });
       childProcesses.push(encoderProcess);
 
       //start aws iot shadow

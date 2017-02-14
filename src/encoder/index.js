@@ -59,6 +59,10 @@ const _ = require('lodash');
                               input: inputFile,
                               output: outputFile,
                             },'ffmpeg ended.')
+                            // if ffmpeg ends then it will never restart
+                            // so we might as well kill the process so it restarts
+                            // TODO: handle camera unplugged
+                            process.kill();
                             ffmpegProcess = null;
                           })
                           .save(outputFile);

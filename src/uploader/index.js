@@ -87,7 +87,7 @@ const VALID_EXT = ['.mp4', '.ts'];
 
       
     } catch (error) {
-      
+      currentlyUploading = false;
     } finally {
 
     }
