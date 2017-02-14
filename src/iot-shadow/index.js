@@ -51,7 +51,7 @@ const writeFileAsync = promisify(fs.writeFile);
       connected = false;
     });
     thingShadows.on('reconnect', function(a,b) {
-      logger.debug('aws iot reconnect attempt');
+      logger.info('aws iot reconnect attempt');
     });
     thingShadows.on('message', function(topic, payload) {
       logger.info('aws iot message', topic, payload);
@@ -77,6 +77,7 @@ const writeFileAsync = promisify(fs.writeFile);
     });
     thingShadows.on('error', function(err) {
       if(err.code === 'ENOTFOUND') {
+        connected = false;
         logger.debug({err:err}, 'Remote host not found. Probably no internet connection');
         return;
       }

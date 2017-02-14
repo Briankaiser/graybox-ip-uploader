@@ -92,7 +92,7 @@ const lookupAsync = promisify(dns.lookup);
       deviceId: localConfig.deviceId,
       internalIps: internalIps,
       externalIp: currentExternalIp,
-      freeMemory: os.freemem(),
+      freeMemory: os.freemem() / (1024*1024),
       loadAverage: _.join(os.loadavg(), ', '),
     };
     currentStatus = _.merge(currentStatus, statusObj);
