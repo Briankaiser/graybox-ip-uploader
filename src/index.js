@@ -21,7 +21,7 @@ const localConfigReader = require('./local-config-reader');
   function ProcessStatusUpdate(msg) {
     if(msg.type !== 'StatusUpdate') return;
       const statusProcess = FindChildProcess(childProcesses, 'status');
-      if(!statusProcess.connected) return;
+      if(!statusProcess || !statusProcess.connected) return;
 
       statusProcess.send({
         type:'StatusUpdate',
@@ -46,6 +46,8 @@ const localConfigReader = require('./local-config-reader');
     //take the status message and push to IoT
     //TODO: also make available to bluetooth config util??
     const iotProcess = FindChildProcess(childProcesses, 'iot');
+    if(!iotProcess) return;
+
     iotProcess.send({
       type: 'CompiledStatus',
       payload: msg.payload,
@@ -68,6 +70,12 @@ const localConfigReader = require('./local-config-reader');
     }
   }
 
+  function sendInitToProcess(cp, config) {
+    cp.send({
+      type:'Init',
+      payload: config
+    });
+  }
 
   function mainInitWithConfig(config) {
       localConfig = config;
@@ -87,47 +95,53 @@ const localConfigReader = require('./local-config-reader');
         }]
       });
   }
-  function mainCreateChildProcesses() {
-      //create child processes
-      //spawn the encoder
-      let encoderProcess = childProcessDebug.fork('./encoder/index.js');
-      encoderProcess.on('message', onEncoderMessage);
+  function spawnRestartableProcess(processPath, messageHandler) {
+      let process = childProcessDebug.fork(processPath);
+      process.on('message', messageHandler);
       //on failure - restart
-      encoderProcess.on('exit', function(exitCode, signal) {
-        _.pull(childProcesses, encoderProcess);
+      process.on('exit', function(exitCode, signal) {
+        _.pull(childProcesses, process);
+
         //wait 5s and restart
         setTimeout(function() {
           logger.info('restarting encoder process');
-          let newEncoderProcess = childProcessDebug.fork('./encoder/index.js')
-          newEncoderProcess.on('message', onEncoderMessage);
-          childProcesses.push(newEncoderProcess);
+          spawnRestartableProcess(processPath, messageHandler);
+          //if iot is running and it has a state - it will rebroadcast
+          //if iot isn't running - on its own startup it will send out device state
+          const iotProcess = FindChildProcess(childProcesses, 'iot');
+          if(!!iotProcess) {
+            iotProcess.send({
+              type: 'RebroadcastRequest'
+            });
+          }
         }, 5000);
 
       });
-      childProcesses.push(encoderProcess);
+      childProcesses.push(process);
+      
+      setImmediate(function() {
+        sendInitToProcess(process, localConfig);
+      });
+
+  }
+  function mainCreateChildProcesses() {
+      //create child processes
+      //spawn the encoder
+      spawnRestartableProcess('./encoder/index.js', onEncoderMessage);
 
       //start aws iot shadow
-      let iotShadowProcess = childProcessDebug.fork('./iot-shadow/index.js');
-      iotShadowProcess.on('message', onIotShadowMessage);
-      childProcesses.push(iotShadowProcess);
+      spawnRestartableProcess('./iot-shadow/index.js', onIotShadowMessage);
 
       //start monitoring process
-      let statusProcess = childProcessDebug.fork('./status/index.js');
-      statusProcess.on('message', onStatusMessage);
-      childProcesses.push(statusProcess);
+      spawnRestartableProcess('./status/index.js', onStatusMessage);
 
       //start uploader process
-      let uploaderProcess = childProcessDebug.fork('./uploader/index.js');
-      uploaderProcess.on('message', onUploaderMessage);
-      childProcesses.push(uploaderProcess);
+      spawnRestartableProcess('./uploader/index.js', onUploaderMessage);
   }
   function mainInitProcesses() {
       //init the processes
       _.each(childProcesses, function(cp) {
-        cp.send({
-        type:'Init',
-        payload: localConfig
-        });
+        SendInitToProcess(cp, localConfig);
       });
   }
 
@@ -135,7 +149,7 @@ const localConfigReader = require('./local-config-reader');
   localConfigReader.load()
     .then(mainInitWithConfig)
     .then(mainCreateChildProcesses)
-    .then(mainInitProcesses)
+    //.then(mainInitProcesses)
     .done(function() {
       }, function(err) {
         if(logger) {

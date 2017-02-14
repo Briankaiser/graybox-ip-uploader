@@ -142,6 +142,12 @@ const writeFileAsync = promisify(fs.writeFile);
     startOfflineStateRetrievalTimer();
   }
 
+  function HandleRebroadcastRequest() {
+    process.send({
+      type: 'DeviceStateChanged',
+      payload: deviceState,
+    });
+  }
   function ProcessUpdatedDeviceState(state) {
     deviceState = state;
     //save cached version to disk
@@ -167,6 +173,8 @@ const writeFileAsync = promisify(fs.writeFile);
       ProcessUpdatedDeviceState(msg.payload);
     } else if(msg.type === 'CompiledStatus') {
       PostCompiledStatusToIoT(msg.payload);
+    } else if(msg.type === 'RebroadcastRequest') {
+      HandleRebroadcastRequest();
     }
   })
 

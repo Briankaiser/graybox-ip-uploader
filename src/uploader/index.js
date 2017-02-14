@@ -45,7 +45,7 @@ const VALID_EXT = ['.mp4', '.ts'];
             })
             .filter((s)=> {
               return s.stat && s.stat.isFile() && _.some(VALID_EXT, (e)=>e === path.extname(s.filename)) && 
-                s.stat.mtime.getTime() < curDate.getTime() - 1000; //make sure time hasn't been modified for 1s
+                s.stat.mtime.getTime() < curDate.getTime() - 1500; //make sure time hasn't been modified for 1s
             })
             .sortBy('stat.mtime')
             .value();
@@ -77,7 +77,11 @@ const VALID_EXT = ['.mp4', '.ts'];
         currentlyUploading = false;
 
       }, function(err) {
-        console.log(err);
+        if(err.code === 'EBUSY') { 
+          logger.debug(err, 'file is still busy. will retry');
+        } else {
+          logger.warn(err);
+        }
         currentlyUploading = false;
       });
       //find all available files to upload
