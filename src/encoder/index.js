@@ -1,30 +1,33 @@
-const ffmpeg = require('fluent-ffmpeg');
-const bunyan = require('bunyan');
-const path = require('path');
-const os = require('os');
-const mkdirp = require('mkdirp');
-const _ = require('lodash');
+const ffmpeg = require('fluent-ffmpeg')
+const bunyan = require('bunyan')
+const path = require('path')
+const url = require('url')
+const mkdirp = require('mkdirp')
+const _ = require('lodash')
 
-(function() {
-  let localConfig = {};
-  let deviceState = {};
-  let ffmpegProcess;
-  let logger;
-  let ignoreNextError = false;
+;(function () {
+  let localConfig = {}
+  let deviceState = {}
+  let ffmpegProcess
+  let logger
+  let ignoreNextError = false
 
-  function getInput(config, state) {
-    if(!_.isEmpty(config.inputSourceOverride)) {
-      return config.inputSourceOverride;
+  function getInput (config, state) {
+    if (!_.isEmpty(config.inputSourceOverride)) {
+      return config.inputSourceOverride
     } else {
-      return state.rtmpStreamAddress;
+      // TODO: verify cameraIp, cameraPort, rtmpStreamPath
+      let baseUrl = 'rtsp://' + state.cameraIp + ':' + state.cameraPort
+      let fullUrl = new url.URL(state.rtmpStreamPath, baseUrl)
+      return fullUrl.toString()
     }
   }
 
-  function startEncoder() {
-    //start ffmpeg
-    const outputFile = path.join(localConfig.tmpDirectory, '/video/', 'output%Y-%m-%d_%H-%M-%S.mp4');
-    const inputFile = getInput(localConfig, deviceState);
-    ignoreNextError = false;
+  function startEncoder () {
+    // start ffmpeg
+    const outputFile = path.join(localConfig.tmpDirectory, '/video/', 'output%Y-%m-%d_%H-%M-%S.mp4')
+    const inputFile = getInput(localConfig, deviceState)
+    ignoreNextError = false
     ffmpegProcess = ffmpeg(inputFile)
                           .format('segment')
                           .outputOptions([
@@ -35,31 +38,30 @@ const _ = require('lodash');
                             '-segment_format mp4',
                             '-c copy'
                           ])
-                          //.output()
-                          .on('start', function() {
+                          .on('start', function () {
                             logger.info({
                               input: inputFile,
-                              output: outputFile,
-                            },'ffmpeg started.')
+                              output: outputFile
+                            }, 'ffmpeg started.')
                           })
-                          .on('error', function(err, stdout, stderr) {
-                            //if graceful exit (ie remote encoder stop)
-                            if(ignoreNextError) {
-                              ignoreNextError = false;
-                              return;
+                          .on('error', function (err, stdout, stderr) {
+                            // if graceful exit (ie remote encoder stop)
+                            if (ignoreNextError) {
+                              ignoreNextError = false
+                              return
                             }
 
                             logger.info({
                               input: inputFile,
                               output: outputFile,
-                              error: err,
-                            },'ffmpeg error')
-                            //attempt to restart ffmpeg if applicable
-                            if(deviceState.encoderEnabled) {
-                              ffmpegProcess = null;
-                              setTimeout(function() {
-                                startEncoder();
-                              }, 5000);
+                              error: err
+                            }, 'ffmpeg error')
+                            // attempt to restart ffmpeg if applicable
+                            if (deviceState.encoderEnabled) {
+                              ffmpegProcess = null
+                              setTimeout(function () {
+                                startEncoder()
+                              }, 5000)
                             }
                           })
                           .on('end', function() {

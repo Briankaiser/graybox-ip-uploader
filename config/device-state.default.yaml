@@ -1,4 +1,6 @@
 encoderEnabled:
-rtmpStreamAddress:
+cameraIp:
+cameraPort:
+rtmpStreamPath:
 accessKey:
 secretKey:
