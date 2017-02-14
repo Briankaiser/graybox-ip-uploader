@@ -53,6 +53,18 @@
         "localRoot": "${workspaceRoot}",
         "remoteRoot": null
     },
+            {
+        "name": "Attach to encoder",
+        "type": "node",
+        "request": "attach",
+        "port": 5859,
+        "address": "localhost",
+        "restart": false,
+        "sourceMaps": false,
+        "outFiles": [],
+        "localRoot": "${workspaceRoot}",
+        "remoteRoot": null
+    },
     {
       "type": "node2",
       "request": "launch",

@@ -42,7 +42,7 @@ const _ = require('lodash');
                               output: outputFile,
                             },'ffmpeg started.')
                           })
-                          .on('error', function(err) {
+                          .on('error', function(err, stdout, stderr) {
                             //if graceful exit (ie remote encoder stop)
                             if(ignoreNextError) {
                               ignoreNextError = false;
@@ -73,7 +73,7 @@ const _ = require('lodash');
                               ffmpegProcess = null;
                               setTimeout(function() {
                                 startEncoder();
-                              }, 5000);
+                              }, 10000);
                             }
                           })
                           .save(outputFile);

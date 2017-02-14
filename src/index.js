@@ -114,7 +114,7 @@ const localConfigReader = require('./local-config-reader');
               type: 'RebroadcastRequest'
             });
           }
-        }, 5000);
+        }, 10000);
 
       });
       childProcesses.push(process);
