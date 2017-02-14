@@ -61,8 +61,7 @@ const _ = require('lodash');
                             },'ffmpeg ended.')
                             // if ffmpeg ends then it will never restart
                             // so we might as well kill the process so it restarts
-                            // TODO: handle camera unplugged
-                            process.kill();
+                            process.exit(1);
                             ffmpegProcess = null;
                           })
                           .save(outputFile);

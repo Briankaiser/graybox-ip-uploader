@@ -118,10 +118,7 @@ const localConfigReader = require('./local-config-reader');
 
       });
       childProcesses.push(process);
-      
-      setImmediate(function() {
-        sendInitToProcess(process, localConfig);
-      });
+      sendInitToProcess(process, localConfig);
 
   }
   function mainCreateChildProcesses() {
