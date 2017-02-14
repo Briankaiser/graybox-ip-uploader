@@ -69,6 +69,12 @@ const localConfigReader = require('./local-config-reader');
       }); 
     }
   }
+  function onBluetoothMessage (msg) {
+    if (msg.type === 'StatusUpdate') {
+      ProcessStatusUpdate(msg)
+      return
+    }
+  }
 
   function sendInitToProcess(cp, config) {
     cp.send({
@@ -134,6 +140,9 @@ const localConfigReader = require('./local-config-reader');
 
       //start uploader process
       spawnRestartableProcess('./uploader/index.js', onUploaderMessage);
+
+      //start bluetooth process
+      spawnRestartableProcess('./bluetooth/index.js', onBluetoothMessage);
   }
   function mainInitProcesses() {
       //init the processes
