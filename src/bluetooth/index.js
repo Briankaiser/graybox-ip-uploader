@@ -34,7 +34,7 @@ try {
       console.log('on -> stateChange: ' + state)
 
       if (state === 'poweredOn') {
-        bleno.startAdvertising('gray-box', [deviceServiceInstance.uuid])
+        bleno.startAdvertising(bleno.name, [deviceServiceInstance.uuid])
       } else {
         bleno.stopAdvertising()
       }

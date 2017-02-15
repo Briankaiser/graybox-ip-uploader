@@ -6,7 +6,7 @@ const DeviceIdCharacteristic = require('./device-id-characteristic')
 
 function DeviceService (initialLocalConfig, initialDeviceState, stateChangedEmitter) {
   DeviceService.super_.call(this, {
-    uuid: '12121212345',
+    uuid: '12121',
     characteristics: [
       new DeviceIdCharacteristic(initialLocalConfig)
     ]
