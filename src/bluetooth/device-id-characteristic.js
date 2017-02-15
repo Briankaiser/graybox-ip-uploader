@@ -7,12 +7,12 @@ var DeviceIdCharacteristic = function (initialLocalConfig) {
   DeviceIdCharacteristic.super_.call(this, {
     uuid: '2A19',
     properties: ['read'],
-    descriptors: [
-      new Descriptor({
-        uuid: '2901',
-        value: 'Device Id assigned to this unit'
-      })
-    ]
+    // descriptors: [
+    //   new Descriptor({
+    //     uuid: '2901',
+    //     value: 'Device Id assigned to this unit'
+    //   })
+    // ]
   })
   this.localConfig = initialLocalConfig
 }
