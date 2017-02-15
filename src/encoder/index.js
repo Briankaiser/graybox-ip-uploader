@@ -12,6 +12,14 @@ const _ = require('lodash')
   let logger
   let ignoreNextError = false
 
+  process.on('exit', function () {
+    if (ffmpegProcess) {
+      ignoreNextError = true
+      ffmpegProcess.kill()
+      ffmpegProcess = null
+    }
+  })
+
   function getInput (config, state) {
     if (!_.isEmpty(config.inputSourceOverride)) {
       return config.inputSourceOverride
@@ -82,11 +90,11 @@ const _ = require('lodash')
                           })
                           .save(outputFile);
   }
-  function stopEncoder() {
-    if(!!ffmpegProcess) {
-      ignoreNextError = true;
-      ffmpegProcess.kill();
-      ffmpegProcess = null;
+  function stopEncoder () {
+    if (ffmpegProcess) {
+      ignoreNextError = true
+      ffmpegProcess.kill()
+      ffmpegProcess = null
     }
   }
 
