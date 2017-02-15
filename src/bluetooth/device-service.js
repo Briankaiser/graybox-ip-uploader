@@ -4,11 +4,11 @@ const BlenoPrimaryService = bleno.PrimaryService
 
 const DeviceIdCharacteristic = require('./device-id-characteristic')
 
-function DeviceService (initialLocalConfig, initialDeviceState, stateChangedEmitter) {
+function DeviceService (initialStatusObject, stateChangedEmitter) {
   DeviceService.super_.call(this, {
     uuid: '121212',
     characteristics: [
-      new DeviceIdCharacteristic(initialLocalConfig)
+      new DeviceIdCharacteristic(initialStatusObject)
     ]
   })
 }

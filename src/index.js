@@ -40,18 +40,25 @@ const localConfigReader = require('./local-config-reader');
       return;
     }
   }
-  function onStatusMessage(msg) {
-    if(msg.type !== 'CompiledStatus') return;
+  function onStatusMessage (msg) {
+    if (msg.type !== 'CompiledStatus') return
 
-    //take the status message and push to IoT
-    //TODO: also make available to bluetooth config util??
-    const iotProcess = FindChildProcess(childProcesses, 'iot');
-    if(!iotProcess) return;
+    // take the status message and push to IoT
+    const iotProcess = FindChildProcess(childProcesses, 'iot')
+    if (!iotProcess) return
 
     iotProcess.send({
       type: 'CompiledStatus',
-      payload: msg.payload,
-    });
+      payload: msg.payload
+    })
+
+    const bluetoothProcess = FindChildProcess(childProcesses, 'bluetooth');
+    if (!bluetoothProcess) return
+
+    bluetoothProcess.send({
+      type: 'CompiledStatus',
+      payload: msg.payload
+    })
   }
   function onIotShadowMessage(msg) {
     if(msg.type === 'StatusUpdate') {
@@ -63,7 +70,7 @@ const localConfigReader = require('./local-config-reader');
       _.each(childProcesses, function(cp) {
         if(!cp.connected) return;
         cp.send({
-          type:'DeviceStateChanged',
+          type: 'DeviceStateChanged',
           payload: msg.payload
         });
       }); 

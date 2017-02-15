@@ -3,7 +3,7 @@ var bleno = require('bleno')
 var Descriptor = bleno.Descriptor
 var Characteristic = bleno.Characteristic
 
-var DeviceIdCharacteristic = function (initialLocalConfig) {
+var DeviceIdCharacteristic = function (initialStatusObject) {
   DeviceIdCharacteristic.super_.call(this, {
     uuid: '2A19',
     properties: ['read'],
@@ -14,16 +14,15 @@ var DeviceIdCharacteristic = function (initialLocalConfig) {
       })
     ]
   })
-  this.localConfig = initialLocalConfig
+  this.status = initialStatusObject
   this._value = new Buffer(0)
 }
 
 util.inherits(DeviceIdCharacteristic, Characteristic)
 
 DeviceIdCharacteristic.prototype.onReadRequest = function (offset, callback) {
-  console.log('read request', offset, callback, this.localConfig.deviceId)
   if (!offset) {
-    this._value = new Buffer(this.localConfig.deviceId)
+    this._value = new Buffer(this.status.deviceId)
   }
   callback(this.RESULT_SUCCESS, this._value.slice(offset, this._value.length))
 }
