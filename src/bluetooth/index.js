@@ -6,7 +6,9 @@ const _ = require('lodash')
 
 let bleno
 try {
-  bleno = require('bleno')
+  if (process.platform !== 'win32') { // don't try to include on windows
+    bleno = require('bleno')
+  }
 } catch (e) {
   console.log('failed to load bleno for bluetooth', e)
   bleno = null
