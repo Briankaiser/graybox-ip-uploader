@@ -6,7 +6,13 @@ var Characteristic = bleno.Characteristic
 var DeviceIdCharacteristic = function (initialLocalConfig) {
   DeviceIdCharacteristic.super_.call(this, {
     uuid: '2A19',
-    properties: ['read']
+    properties: ['read'],
+    descriptors: [
+      new Descriptor({
+        uuid: '2901',
+        value: 'Gets the Device Id'
+      })
+    ]
   })
   this.localConfig = initialLocalConfig
   this._value = new Buffer(0)

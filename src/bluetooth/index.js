@@ -31,10 +31,10 @@ try {
     deviceServiceInstance = new DeviceService(localConfig, deviceState, changeNotifier)
 
     bleno.on('stateChange', function (state) {
-      console.log('on -> stateChange: ' + state, 'graybox-' + localConfig.deviceId, deviceServiceInstance.uuid)
+      console.log('on -> stateChange: ' + state, localConfig.deviceId, deviceServiceInstance.uuid)
 
       if (state === 'poweredOn') {
-        bleno.startAdvertising('graybox-' + localConfig.deviceId, [deviceServiceInstance.uuid])
+        bleno.startAdvertising(localConfig.deviceId, [deviceServiceInstance.uuid])
       } else {
         bleno.stopAdvertising()
       }
