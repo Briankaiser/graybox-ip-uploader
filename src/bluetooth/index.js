@@ -31,7 +31,7 @@ try {
     deviceServiceInstance = new DeviceService(localConfig, deviceState, changeNotifier)
 
     bleno.on('stateChange', function (state) {
-      console.log('on -> stateChange: ' + state)
+      console.log('on -> stateChange: ' + state, bleno.name, deviceServiceInstance.uuid)
 
       if (state === 'poweredOn') {
         bleno.startAdvertising(bleno.name, [deviceServiceInstance.uuid])
