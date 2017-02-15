@@ -9,6 +9,7 @@
   "author": "Brian Kaiser",
   "license": "MIT",
   "dependencies": {
+    "async": "^2.1.4",
     "aws-iot-device-sdk": "^1.0.14",
     "aws-sdk": "^2.10.0",
     "build-url": "^1.0.9",

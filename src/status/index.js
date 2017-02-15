@@ -3,6 +3,7 @@ const path = require('path')
 const os = require('os')
 const dns = require('dns')
 const deferred = require('deferred')
+const async = require('async')
 const ping = require('ping')
 const _ = require('lodash')
 
@@ -61,25 +62,27 @@ const lookupAsync = promisify(dns.lookup)
   })
 
   function GatherInternalStatuses () {
-      // look up external IP
-    return lookupAsync('myip.opendns.com', {family: 4})
-      .then(function (addresses) {
-        currentExternalIp = addresses[0]
-      })
-      .then(function () {
+    let d = deferred()
+    // look up external IP
+    const tasks = {
+      externalIpTask: function (callback) {
+        lookupAsync('myip.opendns.com', {family: 4})
+              .then(function (addresses) {
+                callback(null, addresses[0])
+              }).done()
+      },
+      cameraPingTask: function (callback) {
         // camera ping
-        if (deviceState && !!deviceState.cameraIp) {
-          return ping.promise.probe(deviceState.cameraIp)
+        if (!deviceState || !deviceState.cameraIp) {
+          callback(null, null)
         }
-      })
-      .then(function (cameraPingResult) {
-        if (!cameraPingResult) return
-        // record camera ping
-        currentCameraPing = cameraPingResult.alive
-      })
-      .then(function () {
+        ping.promise.probe(deviceState.cameraIp).then(function (cameraPingResult) {
+          callback(null, cameraPingResult && cameraPingResult.alive)
+        })
+      },
+      internalIpsTask: function (callback) {
         // get local IPs
-        currentInternalIps =
+        let currentInternalIps =
           _.chain(os.networkInterfaces())
           .flatMap()
           .filter(function (ni) {
@@ -88,18 +91,26 @@ const lookupAsync = promisify(dns.lookup)
             return ni.address
           }).join(', ')
           .value()
-      })
-      .then(function () {
+        callback(null, currentInternalIps)
+      }
+    }
+    
+    async.parallel(async.reflectAll(tasks),
+      function (err, results) {
+        console.log(err)
+
         const statusObj = {
           deviceId: localConfig.deviceId,
-          internalIps: currentInternalIps,
-          externalIp: currentExternalIp,
+          internalIps: results.internalIpsTask.value,
+          externalIp: results.externalIpTask.value,
           freeMemory: os.freemem() / (1024 * 1024),
           loadAverage: _.join(os.loadavg(), ', '),
-          cameraPing: currentCameraPing
+          cameraPing: results.cameraPingTask.value
         }
-        return _.merge(currentStatus, statusObj)
+        d.resolve(_.merge(currentStatus, statusObj))
       })
+
+    return d.promise
   }
 
   setInterval(function () {
