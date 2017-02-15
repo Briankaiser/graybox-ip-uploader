@@ -128,21 +128,24 @@ const localConfigReader = require('./local-config-reader');
 
   }
   function mainCreateChildProcesses() {
-      //create child processes
-      //spawn the encoder
-      spawnRestartableProcess('./encoder/index.js', onEncoderMessage);
+    // create child processes
+    // spawn the encoder
+    spawnRestartableProcess('./encoder/index.js', onEncoderMessage)
 
-      //start aws iot shadow
-      spawnRestartableProcess('./iot-shadow/index.js', onIotShadowMessage);
+    // start aws iot shadow
+    spawnRestartableProcess('./iot-shadow/index.js', onIotShadowMessage)
 
-      //start monitoring process
-      spawnRestartableProcess('./status/index.js', onStatusMessage);
+    // start monitoring process
+    spawnRestartableProcess('./status/index.js', onStatusMessage)
 
-      //start uploader process
-      spawnRestartableProcess('./uploader/index.js', onUploaderMessage);
+    // start uploader process
+    spawnRestartableProcess('./uploader/index.js', onUploaderMessage)
 
-      //start bluetooth process
-      spawnRestartableProcess('./bluetooth/index.js', onBluetoothMessage);
+    // start bluetooth process (not on Win32 for now)
+    if (process.platform !== 'win32') {
+      spawnRestartableProcess('./bluetooth/index.js', onBluetoothMessage)
+    }
+
   }
   function mainInitProcesses() {
       //init the processes

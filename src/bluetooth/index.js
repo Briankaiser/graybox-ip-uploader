@@ -1,8 +1,7 @@
 const bunyan = require('bunyan')
 const path = require('path')
-const os = require('os')
-const deferred = require('deferred')
-const _ = require('lodash')
+const events = require('events')
+const DeviceService = require('./device-service')
 
 let bleno
 try {
@@ -14,13 +13,12 @@ try {
   bleno = null
 }
 
-const promisify = deferred.promisify
-
-
 ;(function () {
   let localConfig = {}
   let deviceState = {}
   let logger
+  let changeNotifier
+  let deviceServiceInstance
 
 
   function initBluetooth () {
@@ -29,17 +27,25 @@ const promisify = deferred.promisify
       return
     }
 
+    changeNotifier = new events.EventEmitter()
+    deviceServiceInstance = new DeviceService(localConfig, deviceState, changeNotifier)
+
     bleno.on('stateChange', function (state) {
       console.log('on -> stateChange: ' + state)
 
       if (state === 'poweredOn') {
-        bleno.startAdvertising('TEST', ['180F'])
+        bleno.startAdvertising('gray-box', [deviceServiceInstance.uuid])
       } else {
         bleno.stopAdvertising()
       }
     })
     bleno.on('advertisingStart', function (error) {
       console.log('on -> advertisingStart: ' + (error ? 'error ' + error : 'success'))
+      if (!error) {
+        bleno.setServices([
+          deviceServiceInstance
+        ])
+      }
     })
   }
   function init (config) {
