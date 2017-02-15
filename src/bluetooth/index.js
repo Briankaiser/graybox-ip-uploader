@@ -9,6 +9,7 @@ try {
   bleno = require('bleno')
 } catch (e) {
   console.log('failed to load bleno for bluetooth', e)
+  bleno = null
 }
 
 const promisify = deferred.promisify

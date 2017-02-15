@@ -11,7 +11,7 @@
   "dependencies": {
     "aws-iot-device-sdk": "^1.0.14",
     "aws-sdk": "^2.10.0",
-    "bleno": "^0.4.1",
+    "build-url": "^1.0.9",
     "bunyan": "^1.8.5",
     "child-process-debug": "^0.0.7",
     "deferred": "^0.7.5",
@@ -21,6 +21,9 @@
     "mkdirp": "^0.5.1",
     "ping": "^0.2.1",
     "yargs": "^6.6.0"
+  },
+  "optionalDependencies": {
+    "bleno": "^0.4.1"
   },
   "devDependencies": {
     "standard": "^8.6.0"

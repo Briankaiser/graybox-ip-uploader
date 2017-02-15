@@ -1,7 +1,7 @@
 const ffmpeg = require('fluent-ffmpeg')
 const bunyan = require('bunyan')
 const path = require('path')
-const url = require('url')
+const buildUrl = require('build-url')
 const mkdirp = require('mkdirp')
 const _ = require('lodash')
 
@@ -18,8 +18,10 @@ const _ = require('lodash')
     } else {
       // TODO: verify cameraIp, cameraPort, rtmpStreamPath
       let baseUrl = 'rtsp://' + state.cameraIp + ':' + state.cameraPort
-      let fullUrl = new url.URL(state.rtmpStreamPath, baseUrl)
-      return fullUrl.toString()
+      let fullUrl = buildUrl(baseUrl, {
+        path: state.rtmpStreamPath
+      })
+      return fullUrl
     }
   }
 
