@@ -21,12 +21,14 @@ try {
   let logger
   let changeNotifier
   let deviceServiceInstance
+  let bluetoothOpen = false
 
   process.on('exit', function () {
     if (changeNotifier) {
       changeNotifier.removeAllListeners()
     }
     if (bleno) {
+      bluetoothOpen = false
       bleno.stopAdvertising()
     }
   })
@@ -46,12 +48,14 @@ try {
       if (state === 'poweredOn') {
         bleno.startAdvertising(localConfig.deviceId, [deviceServiceInstance.uuid])
       } else {
+        bluetoothOpen = false
         bleno.stopAdvertising()
       }
     })
     bleno.on('advertisingStart', function (error) {
-      // console.log('on -> advertisingStart: ' + (error ? 'error ' + error : 'success'))
+      console.log('on -> advertisingStart: ' + (error ? 'error ' + error : 'success'))
       if (!error) {
+        bluetoothOpen = true
         bleno.setServices([
           deviceServiceInstance
         ])
@@ -106,9 +110,19 @@ try {
     }
   })
 
+  function buildBluetoothStatusMessage () {
+    return {
+      type: 'StatusUpdate',
+      payload: {
+        blenoLoaded: !!bleno,
+        bluetoothOpen: bluetoothOpen
+      }
+    }
+  }
+
 
   setInterval(function () {
     // report status
-
+    process.send(buildBluetoothStatusMessage())
   }, 10000)
 })()
