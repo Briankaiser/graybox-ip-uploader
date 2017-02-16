@@ -23,6 +23,9 @@ try {
   let deviceServiceInstance
 
   process.on('exit', function () {
+    if (changeNotifier) {
+      changeNotifier.removeAllListeners()
+    }
     if (bleno) {
       bleno.stopAdvertising()
     }
