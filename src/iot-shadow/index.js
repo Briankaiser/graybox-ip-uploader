@@ -148,12 +148,15 @@ const writeFileAsync = promisify(fs.writeFile);
       payload: deviceState,
     });
   }
-  function ProcessUpdatedDeviceState(state) {
-    deviceState = state;
-    //save cached version to disk
-    const cachedConfigPath = path.join(localConfig.tmpDirectory, 'cached-device-state.yaml');
-    const yamlState = yaml.safeDump(deviceState);
-    writeFileAsync(cachedConfigPath, yamlState).done();
+  function ProcessUpdatedDeviceState (state) {
+    deviceState = state
+    // save cached version to disk
+    if (!_.isEmpty(deviceState)) {
+      const cachedConfigPath = path.join(localConfig.tmpDirectory, 'cached-device-state.yaml')
+      const yamlState = yaml.safeDump(deviceState)
+      writeFileAsync(cachedConfigPath, yamlState).done()
+    }
+
   }
   function buildIotStatusMessage() {
     return {

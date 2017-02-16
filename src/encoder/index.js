@@ -12,6 +12,14 @@ const _ = require('lodash')
   let logger
   let ignoreNextError = false
 
+  process.on('exit', function () {
+    if (ffmpegProcess) {
+      ignoreNextError = true
+      ffmpegProcess.kill()
+      ffmpegProcess = null
+    }
+  })
+
   function getInput (config, state) {
     if (!_.isEmpty(config.inputSourceOverride)) {
       return config.inputSourceOverride
@@ -27,17 +35,18 @@ const _ = require('lodash')
 
   function startEncoder () {
     // start ffmpeg
-    const outputFile = path.join(localConfig.tmpDirectory, '/video/', 'output%Y-%m-%d_%H-%M-%S.mp4')
+    const outputFile = path.join(localConfig.tmpDirectory, '/video/', 'output%Y-%m-%d_%H-%M-%S.ts')
     const inputFile = getInput(localConfig, deviceState)
     ignoreNextError = false
     ffmpegProcess = ffmpeg(inputFile)
                           .format('segment')
                           .outputOptions([
-                            '-segment_time 4',
+                            '-segment_time 8',
                             '-reset_timestamps 1',
                             '-strftime 1',
                             '-segment_start_number 1',
-                            '-segment_format mp4',
+                            '-segment_time_delta 0.3',
+                            // '-segment_format mp4',
                             '-c copy'
                           ])
                           .on('start', function () {
@@ -82,11 +91,11 @@ const _ = require('lodash')
                           })
                           .save(outputFile);
   }
-  function stopEncoder() {
-    if(!!ffmpegProcess) {
-      ignoreNextError = true;
-      ffmpegProcess.kill();
-      ffmpegProcess = null;
+  function stopEncoder () {
+    if (ffmpegProcess) {
+      ignoreNextError = true
+      ffmpegProcess.kill()
+      ffmpegProcess = null
     }
   }
 

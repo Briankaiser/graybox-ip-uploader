@@ -1,6 +1,7 @@
 const bunyan = require('bunyan')
 const path = require('path')
 const events = require('events')
+const _ = require('lodash')
 const DeviceService = require('./device-service')
 
 let bleno
@@ -16,10 +17,16 @@ try {
 ;(function () {
   let localConfig = {}
   let deviceState = {}
+  let mergedStatusObject = {}
   let logger
   let changeNotifier
   let deviceServiceInstance
 
+  process.on('exit', function () {
+    if (bleno) {
+      bleno.stopAdvertising()
+    }
+  })
 
   function initBluetooth () {
     if (!bleno) {
@@ -28,19 +35,19 @@ try {
     }
 
     changeNotifier = new events.EventEmitter()
-    deviceServiceInstance = new DeviceService(localConfig, deviceState, changeNotifier)
+    deviceServiceInstance = new DeviceService(mergedStatusObject, changeNotifier)
 
     bleno.on('stateChange', function (state) {
-      console.log('on -> stateChange: ' + state, 'graybox-' + localConfig.deviceId, deviceServiceInstance.uuid)
+      logger.info({state: state}, 'bluetooth state changed')
 
       if (state === 'poweredOn') {
-        bleno.startAdvertising('graybox-' + localConfig.deviceId, [deviceServiceInstance.uuid])
+        bleno.startAdvertising(localConfig.deviceId, [deviceServiceInstance.uuid])
       } else {
         bleno.stopAdvertising()
       }
     })
     bleno.on('advertisingStart', function (error) {
-      console.log('on -> advertisingStart: ' + (error ? 'error ' + error : 'success'))
+      // console.log('on -> advertisingStart: ' + (error ? 'error ' + error : 'success'))
       if (!error) {
         bleno.setServices([
           deviceServiceInstance
@@ -65,11 +72,23 @@ try {
         level: 'debug'
       }]
     })
+    mergedStatusObject = _.merge(mergedStatusObject, localConfig)
+
     initBluetooth()
   }
 
   function ProcessUpdatedDeviceState (newState) {
     deviceState = newState
+    mergedStatusObject = _.merge(mergedStatusObject, deviceState)
+    if (changeNotifier) {
+      changeNotifier.emit('statusChanged', mergedStatusObject)
+    }
+  }
+  function ProcessCompiledStatus (newStatus) {
+    mergedStatusObject = _.merge(mergedStatusObject, newStatus)
+    if (changeNotifier) {
+      changeNotifier.emit('statusChanged', mergedStatusObject)
+    }
   }
 
   process.on('message', function (msg) {
@@ -79,6 +98,8 @@ try {
       init(msg.payload)
     } else if (msg.type === 'DeviceStateChanged') {
       ProcessUpdatedDeviceState(msg.payload)
+    } else if (msg.type === 'CompiledStatus') {
+      ProcessCompiledStatus(msg.payload)
     }
   })
 

@@ -15,8 +15,8 @@ const argv = require('yargs').default('config','../config/local-config.yaml').ar
 const defaultConfig = {
   "deviceId": "",
   "ffmpegOverridePath":"",
-  "tmpDirectory": path.join(os.tmpdir(), '/graybox-tmp'),
-  "loggingPath": path.join(os.tmpdir(), '/graybox-tmp/logs')
+  "tmpDirectory": path.join(os.homedir(), '/graybox'),
+  "loggingPath": path.join(os.homedir(), '/graybox/logs')
 };
 module.exports = 
 {
