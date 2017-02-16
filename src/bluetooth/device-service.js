@@ -6,6 +6,7 @@ const DeviceIdCharacteristic = require('./device-id-characteristic')
 const LocalIpsCharacteristic = require('./local-ips-characteristic')
 const ExternalIpCharacteristic = require('./external-ip-characteristic')
 const DateTimeCharacteristic = require('./date-time-characteristic')
+const PendingUploadCountCharacteristic = require('./pending-upload-count-characteristic')
 
 function DeviceService (initialStatusObject, stateChangedEmitter) {
   DeviceService.super_.call(this, {
@@ -14,7 +15,8 @@ function DeviceService (initialStatusObject, stateChangedEmitter) {
       new DeviceIdCharacteristic(initialStatusObject),
       new LocalIpsCharacteristic(initialStatusObject, stateChangedEmitter),
       new ExternalIpCharacteristic(initialStatusObject, stateChangedEmitter),
-      new DateTimeCharacteristic()
+      new DateTimeCharacteristic(),
+      new PendingUploadCountCharacteristic(initialStatusObject, stateChangedEmitter)
     ]
   })
 }
