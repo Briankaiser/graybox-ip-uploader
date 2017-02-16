@@ -23,7 +23,8 @@ util.inherits(PendingUploadCountCharacteristic, Characteristic)
 
 PendingUploadCountCharacteristic.prototype.onReadRequest = function (offset, callback) {
   if (!offset) {
-    this._value = new Buffer(this.status.filesPendingUpload)
+    const tmpValue = this.status && this.status.filesPendingUpload ? this.status.filesPendingUpload.toString() : ''
+    this._value = new Buffer(tmpValue)
   }
   callback(this.RESULT_SUCCESS, this._value.slice(offset, this._value.length))
 }
