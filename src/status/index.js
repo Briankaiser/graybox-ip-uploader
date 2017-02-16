@@ -16,12 +16,7 @@ const lookupAsync = promisify(dns.lookup)
   let deviceState = {}
   let currentStatus = {}
   let logger
-  let currentExternalIp = ''
-  let currentCameraPing = false
-  let currentInternalIps = ''
-
-
-
+  
   function init (config) {
     localConfig = config
     logger = bunyan.createLogger({

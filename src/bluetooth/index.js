@@ -22,6 +22,11 @@ try {
   let changeNotifier
   let deviceServiceInstance
 
+  process.on('exit', function () {
+    if (bleno) {
+      bleno.stopAdvertising()
+    }
+  })
 
   function initBluetooth () {
     if (!bleno) {
@@ -93,7 +98,7 @@ try {
       init(msg.payload)
     } else if (msg.type === 'DeviceStateChanged') {
       ProcessUpdatedDeviceState(msg.payload)
-    } else if(msg.type === 'CompiledStatus') {
+    } else if (msg.type === 'CompiledStatus') {
       ProcessCompiledStatus(msg.payload)
     }
   })

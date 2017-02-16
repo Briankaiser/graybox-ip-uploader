@@ -70,7 +70,7 @@ const VALID_EXT = ['.mp4', '.ts'];
           Body: fs.createReadStream(toUpload),
         }).promise()
           .then(()=> unlinkAsync(toUpload)) //delete file on successful upload
-          .then(()=> logger.debug(toUpload, 'successfully uploaded and deleted'));
+          .then(()=> logger.info(toUpload, 'successfully uploaded and deleted'));
 
       })
       .done(function() {

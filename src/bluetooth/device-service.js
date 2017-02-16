@@ -5,6 +5,7 @@ const BlenoPrimaryService = bleno.PrimaryService
 const DeviceIdCharacteristic = require('./device-id-characteristic')
 const LocalIpsCharacteristic = require('./local-ips-characteristic')
 const ExternalIpCharacteristic = require('./external-ip-characteristic')
+const DateTimeCharacteristic = require('./date-time-characteristic')
 
 function DeviceService (initialStatusObject, stateChangedEmitter) {
   DeviceService.super_.call(this, {
@@ -12,7 +13,8 @@ function DeviceService (initialStatusObject, stateChangedEmitter) {
     characteristics: [
       new DeviceIdCharacteristic(initialStatusObject),
       new LocalIpsCharacteristic(initialStatusObject, stateChangedEmitter),
-      new ExternalIpCharacteristic(initialStatusObject, stateChangedEmitter)
+      new ExternalIpCharacteristic(initialStatusObject, stateChangedEmitter),
+      new DateTimeCharacteristic()
     ]
   })
 }
