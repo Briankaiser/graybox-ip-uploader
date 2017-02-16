@@ -77,10 +77,12 @@ const VALID_EXT = ['.mp4', '.ts'];
         currentlyUploading = false;
 
       }, function(err) {
-        if(err.code === 'EBUSY') { 
-          logger.debug(err, 'file is still busy. will retry');
+        if (err.code === 'EBUSY') {
+          logger.debug(err, 'file is still busy. will retry')
+        } else if (err.code === 'UnknownEndpoint') {
+          logger.debug({code: err.code, message: err.message}, 'Cant connect to endpoint. Probably no internet')
         } else {
-          logger.warn(err);
+          logger.warn(err)
         }
         currentlyUploading = false;
       });
@@ -95,8 +97,6 @@ const VALID_EXT = ['.mp4', '.ts'];
     } finally {
 
     }
-
-
 
   }
 
@@ -116,7 +116,7 @@ const VALID_EXT = ['.mp4', '.ts'];
     if(uploaderInterval) {
       clearInterval(uploaderInterval);
     }
-    uploaderInterval = setInterval(checkAndUploadNextFile, 1000);
+    uploaderInterval = setInterval(checkAndUploadNextFile, 2000);
   }
 
 

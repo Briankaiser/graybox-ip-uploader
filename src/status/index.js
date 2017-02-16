@@ -16,7 +16,7 @@ const lookupAsync = promisify(dns.lookup)
   let deviceState = {}
   let currentStatus = {}
   let logger
-  
+
   function init (config) {
     localConfig = config
     logger = bunyan.createLogger({
@@ -92,7 +92,7 @@ const lookupAsync = promisify(dns.lookup)
     
     async.parallel(async.reflectAll(tasks),
       function (err, results) {
-        console.log(err)
+        logger.warn(err)
 
         const statusObj = {
           deviceId: localConfig.deviceId,
