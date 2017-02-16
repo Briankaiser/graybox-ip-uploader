@@ -96,11 +96,9 @@ const lookupAsync = promisify(dns.lookup)
         callback(null, currentInternalIps)
       }
     }
-    
+
     async.parallel(async.reflectAll(tasks),
       function (err, results) {
-        logger.debug(results, 'status tasks results')
-
         const statusObj = {
           deviceId: localConfig.deviceId,
           internalIps: results.internalIpsTask.value,
