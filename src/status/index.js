@@ -67,9 +67,11 @@ const lookupAsync = promisify(dns.lookup)
     const tasks = {
       externalIpTask: function (callback) {
         lookupAsync('myip.opendns.com', {family: 4})
-              .then(function (addresses) {
+              .done(function (addresses) {
                 callback(null, addresses[0])
-              }).done()
+              }, function (err) {
+                callback(err)
+              })
       },
       cameraPingTask: function (callback) {
         // camera ping
@@ -97,8 +99,7 @@ const lookupAsync = promisify(dns.lookup)
     
     async.parallel(async.reflectAll(tasks),
       function (err, results) {
-        logger.warn(err)
-        logger.debug(tasks, 'status tasks results')
+        logger.debug(results, 'status tasks results')
 
         const statusObj = {
           deviceId: localConfig.deviceId,
