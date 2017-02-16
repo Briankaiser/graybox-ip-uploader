@@ -17,6 +17,11 @@ const lookupAsync = promisify(dns.lookup)
   let currentStatus = {}
   let logger
 
+  process.on('uncaughtException', (err) => {
+    console.error('unhandled status exception', err)
+    process.exit(1)
+  })
+
   function init (config) {
     localConfig = config
     logger = bunyan.createLogger({
@@ -93,6 +98,7 @@ const lookupAsync = promisify(dns.lookup)
     async.parallel(async.reflectAll(tasks),
       function (err, results) {
         logger.warn(err)
+        logger.debug(tasks, 'status tasks results')
 
         const statusObj = {
           deviceId: localConfig.deviceId,

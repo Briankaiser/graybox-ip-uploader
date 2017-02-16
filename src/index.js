@@ -9,6 +9,14 @@ const localConfigReader = require('./local-config-reader')
   let localConfig
   let logger
 
+  process.on('exit', function () {
+    if (childProcesses) {
+      _.each(childProcesses, function (cp) {
+        if (cp) cp.kill()
+      })
+    }
+  })
+
   function FindChildProcess (processes, toFindString) {
     return _.find(processes, function (p) {
       return _.some(p.spawnargs, function (sa) {
