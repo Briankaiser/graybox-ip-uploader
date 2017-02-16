@@ -43,7 +43,7 @@ try {
     deviceServiceInstance = new DeviceService(mergedStatusObject, changeNotifier)
 
     bleno.on('stateChange', function (state) {
-      logger.info({state: state}, 'bluetooth state changed')
+      logger.debug({state: state}, 'bluetooth state changed')
 
       if (state === 'poweredOn') {
         bleno.startAdvertising(localConfig.deviceId, [deviceServiceInstance.uuid])
@@ -53,13 +53,19 @@ try {
       }
     })
     bleno.on('advertisingStart', function (error) {
-      console.log('on -> advertisingStart: ' + (error ? 'error ' + error : 'success'))
+      logger.debug('on -> advertisingStart: ' + (error ? 'error ' + error : 'success'))
       if (!error) {
         bluetoothOpen = true
         bleno.setServices([
           deviceServiceInstance
         ])
       }
+    })
+    bleno.on('accept', function (clientAddress) {
+      logger.debug({clientAddress: clientAddress}, 'client connected')
+    })
+    bleno.on('disconnect', function (clientAddress) {
+      logger.debug({clientAddress: clientAddress}, 'client disconnected')
     })
   }
   function init (config) {
