@@ -114,19 +114,19 @@ const localConfigReader = require('./local-config-reader')
       process.on('exit', function(exitCode, signal) {
         _.pull(childProcesses, process);
 
-        //wait 5s and restart
-        setTimeout(function() {
-          logger.info('restarting encoder process');
-          spawnRestartableProcess(processPath, messageHandler);
-          //if iot is running and it has a state - it will rebroadcast
-          //if iot isn't running - on its own startup it will send out device state
-          const iotProcess = FindChildProcess(childProcesses, 'iot');
-          if(!!iotProcess) {
+        // wait 10s and restart
+        setTimeout(function () {
+          logger.info({processPath: processPath}, 'restarting process')
+          spawnRestartableProcess(processPath, messageHandler)
+          // if iot is running and it has a state - it will rebroadcast
+          // if iot isn't running - on its own startup it will send out device state
+          const iotProcess = FindChildProcess(childProcesses, 'iot')
+          if (iotProcess) {
             iotProcess.send({
               type: 'RebroadcastRequest'
-            });
+            })
           }
-        }, 10000);
+        }, 10000)
 
       });
       childProcesses.push(process);
