@@ -33,8 +33,6 @@ LocalCameraProxyCharacteristic.prototype.onReadRequest = function (offset, callb
 LocalCameraProxyCharacteristic.prototype.onWriteRequest = function (data, offset, withoutResponse, callback) {
   if (offset) {
     callback(this.RESULT_ATTR_NOT_LONG)
-  } else if (data.length !== 1) {
-    callback(this.RESULT_INVALID_ATTRIBUTE_LENGTH)
   } else {
     var shouldActivateString = data.toString('utf8')
     if (shouldActivateString === 'true' || shouldActivateString === 'false') {
