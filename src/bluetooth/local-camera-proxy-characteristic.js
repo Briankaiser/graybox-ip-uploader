@@ -5,7 +5,7 @@ var Characteristic = bleno.Characteristic
 
 var LocalCameraProxyCharacteristic = function (initialStatusObject, stateChangedEmitter) {
   LocalCameraProxyCharacteristic.super_.call(this, {
-    uuid: '2A69',
+    uuid: '2A89',
     properties: ['read, write'], // this could also be a notify if we wanted
     descriptors: [
       new Descriptor({
