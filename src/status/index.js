@@ -15,10 +15,16 @@ const lookupAsync = promisify(dns.lookup)
   let deviceState = {}
   let currentStatus = {}
   let logger
+  let statusInterval
 
   process.on('uncaughtException', (err) => {
     console.error('unhandled status exception', err)
     process.exit(1)
+  })
+  process.on('exit', function () {
+    if (statusInterval) {
+      clearInterval(statusInterval)
+    }
   })
 
   function init (config) {
@@ -114,7 +120,7 @@ const lookupAsync = promisify(dns.lookup)
 
   setInterval(function () {
     // update internal status
-    GatherInternalStatuses().done(function (fullStatus) {
+    statusInterval = GatherInternalStatuses().done(function (fullStatus) {
       process.send({
         type: 'CompiledStatus',
         payload: currentStatus
