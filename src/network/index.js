@@ -50,7 +50,7 @@ const IPTABLES_CHAIN = 'PREROUTING'
       IPTABLES_TABLE,
       '-A',
       IPTABLES_CHAIN,
-      '-j', // interface to forward from
+      '-i', // interface to forward from
       'eth0',
       '-p', // protocol
       'tcp',
