@@ -35,6 +35,18 @@ const localConfigReader = require('./local-config-reader')
       payload: msg.payload
     })
   }
+  function RequestDeviceStateChange (payload) {
+    logger.info(payload, 'bluetooth requested a device state change!')
+    // take the status message and push to IoT
+    const iotProcess = FindChildProcess(childProcesses, 'iot')
+    if (!iotProcess) return
+
+    iotProcess.send({
+      type: 'RequestDeviceStateChange',
+      payload: payload
+    })
+  }
+
   function onEncoderMessage (msg) {
     if (msg.type === 'StatusUpdate') {
       ProcessStatusUpdate(msg)
@@ -88,8 +100,11 @@ const localConfigReader = require('./local-config-reader')
       ProcessStatusUpdate(msg)
       return
     } else if (msg.type === 'RequestDeviceStateChange') {
-      logger.info(msg, 'bluetooth requested a device state change!')
+      RequestDeviceStateChange(msg.payload)
     }
+  }
+  function onNetworkMessage (msg) {
+
   }
 
   function sendInitToProcess (cp, config) {
@@ -159,6 +174,7 @@ const localConfigReader = require('./local-config-reader')
     // start bluetooth process (not on Win32 for now)
     if (process.platform !== 'win32') {
       spawnRestartableProcess('./bluetooth/index.js', onBluetoothMessage)
+      spawnRestartableProcess('./network/index.js', onNetworkMessage)
     }
   }
 
@@ -174,4 +190,11 @@ const localConfigReader = require('./local-config-reader')
           console.log(err)
         }
       })
+
+  setTimeout(function () {
+    // sending sample message
+    RequestDeviceStateChange({
+      localCameraProxy: true
+    })
+  }, 20000)
 })()

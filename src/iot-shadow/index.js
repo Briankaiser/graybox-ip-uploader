@@ -16,6 +16,7 @@ const writeFileAsync = promisify(fs.writeFile)
   let logger
   let connected = false
   let thingShadows
+  let lastUpdateClientToken
 
   function initIotShadowConnection () {
     // TODO: verify host, keys exist, deviceId exists
@@ -65,11 +66,18 @@ const writeFileAsync = promisify(fs.writeFile)
     thingShadows.on('status', function (thingName, statusType, clientToken, stateObject) {
       logger.debug('awsstatus', thingName, statusType, clientToken, stateObject)
       connected = true
+      // if this is a response to our update request - then log it and return
+      // the 'delta' handler will process the update
+      if (clientToken === lastUpdateClientToken) {
+        lastUpdateClientToken = null
+        logger.debug('update request successful', clientToken)
+        return
+      }
       if (statusType === 'accepted' && thingName === localConfig.deviceId) {
         // set device state
         process.send({
           type: 'DeviceStateChanged',
-          payload: _.merge({}, stateObject.state.desired)
+          payload: _.merge({}, deviceState, stateObject.state.desired)
         })
       }
     })
@@ -146,6 +154,16 @@ const writeFileAsync = promisify(fs.writeFile)
     })
   }
 
+  function HandleRequestDeviceStateChange (payload) {
+    // TODO: should have some better retry logic around thingShadow
+    lastUpdateClientToken = thingShadows.update(localConfig.deviceId, {
+      state: {
+        desired: payload
+      }
+    })
+    logger.debug({payload: payload, clientToken: lastUpdateClientToken}, 'sending device state update request')
+  }
+
   function ProcessUpdatedDeviceState (state) {
     deviceState = state
     // save cached version to disk
@@ -176,6 +194,8 @@ const writeFileAsync = promisify(fs.writeFile)
       PostCompiledStatusToIoT(msg.payload)
     } else if (msg.type === 'RebroadcastRequest') {
       HandleRebroadcastRequest()
+    } else if (msg.type === 'RequestDeviceStateChange') {
+      HandleRequestDeviceStateChange(msg.payload)
     }
   })
 

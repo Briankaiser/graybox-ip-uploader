@@ -4,3 +4,4 @@ cameraPort:
 rtmpStreamPath:
 accessKey:
 secretKey:
+localCameraProxy:

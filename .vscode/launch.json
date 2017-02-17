@@ -53,7 +53,7 @@
         "localRoot": "${workspaceRoot}",
         "remoteRoot": null
     },
-            {
+    {
         "name": "Attach to encoder",
         "type": "node",
         "request": "attach",

@@ -6,7 +6,7 @@ var Characteristic = bleno.Characteristic
 var LocalCameraProxyCharacteristic = function (initialStatusObject, stateChangedEmitter) {
   LocalCameraProxyCharacteristic.super_.call(this, {
     uuid: '2A89',
-    properties: ['read, write', 'writeWithoutResponse'],
+    properties: ['read', 'write', 'writeWithoutResponse'],
     descriptors: [
       new Descriptor({
         uuid: '2901',
@@ -24,7 +24,7 @@ util.inherits(LocalCameraProxyCharacteristic, Characteristic)
 
 LocalCameraProxyCharacteristic.prototype.onReadRequest = function (offset, callback) {
   if (!offset) {
-    const tmpValue = this.status && this.status.localCameraProxy ? this.status.localCameraProxy : 0
+    const tmpValue = this.status && this.status.localCameraProxy ? 1 : 0
     this._value = new Buffer(1)
     this._value.writeUInt8(tmpValue, 0)
   }
@@ -45,12 +45,11 @@ LocalCameraProxyCharacteristic.prototype.onWriteRequest = function (data, offset
       process.send({
         type: 'RequestDeviceStateChange',
         msg: {
-          localCameraProxy: shouldActivate
+          localCameraProxy: !!shouldActivate
         }
       })
 
       callback(this.RESULT_SUCCESS)
-      console.log('set localcameraproxy', shouldActivate)
     } else {
       callback(this.RESULT_UNLIKELY_ERROR)
     }
