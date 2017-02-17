@@ -1,10 +1,12 @@
 const bunyan = require('bunyan')
 const path = require('path')
+const fs = require('fs')
 const deferred = require('deferred')
 const childProcess = require('child_process')
 
 const IPTABLES_TABLE = 'nat'
 const IPTABLES_CHAIN = 'PREROUTING'
+const IP_FORWARDING_PATH = '/proc/sys/net/ipv4/ip_forward'
 
 ;(function () {
   let localConfig = {}
@@ -21,6 +23,20 @@ const IPTABLES_CHAIN = 'PREROUTING'
       clearInterval(statusInterval)
     }
   })
+
+  function setIpForwarding (isEnabled) {
+    let d = deferred()
+    const toWrite = isEnabled ? '1' : '0'
+    fs.writeFile(IP_FORWARDING_PATH, toWrite, (err) => {
+      if (err) {
+        d.reject(err)
+      } else {
+        d.resolve()
+      }
+    })
+
+    return d.promise
+  }
 
   function executeIpTablesCommand (args) {
     let d = deferred()
@@ -66,7 +82,9 @@ const IPTABLES_CHAIN = 'PREROUTING'
 
   function turnProxyOff () {
     logger.info('turning proxy off')
-    executeFlushChain().done(
+    setIpForwarding(false)
+    .then(() => executeFlushChain())
+    .done(
       function () {
         logger.info('successfully flushed proxy chain')
       },
@@ -77,7 +95,8 @@ const IPTABLES_CHAIN = 'PREROUTING'
   }
   function turnProxyOn () {
     logger.info('turning proxy on')
-    executeFlushChain()
+    setIpForwarding(true)
+    .then(() => executeFlushChain())
     .then(() => executeAddCameraForwardPort(80))
     .then(() => executeAddCameraForwardPort(554))
     .then(() => executeAddCameraForwardPort(8091))
