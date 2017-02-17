@@ -70,15 +70,15 @@ const lookupAsync = promisify(dns.lookup)
     let d = deferred()
     // look up external IP
     const tasks = {
-      externalIpTask: function (callback) {
+      externalIpTask: async.timeout(function (callback) {
         lookupAsync('myip.opendns.com', {family: 4})
               .done(function (addresses) {
                 callback(null, addresses[0])
               }, function (err) {
                 callback(err)
               })
-      },
-      cameraPingTask: function (callback) {
+      }, 2000),
+      cameraPingTask: async.timeout(function (callback) {
         // camera ping
         if (!deviceState || !deviceState.cameraIp) {
           callback(null, null)
@@ -86,7 +86,7 @@ const lookupAsync = promisify(dns.lookup)
         ping.promise.probe(deviceState.cameraIp).then(function (cameraPingResult) {
           callback(null, cameraPingResult && cameraPingResult.alive)
         })
-      },
+      }, 2000),
       internalIpsTask: function (callback) {
         // get local IPs
         let currentInternalIps =

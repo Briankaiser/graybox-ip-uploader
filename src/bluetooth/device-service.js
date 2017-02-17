@@ -9,6 +9,7 @@ const DateTimeCharacteristic = require('./date-time-characteristic')
 const PendingUploadCountCharacteristic = require('./pending-upload-count-characteristic')
 const CameraConnectedCharacteristic = require('./camera-connected-characteristic')
 const IoTConnectedCharacteristic = require('./iot-connected-characteristic')
+const LocalCameraProxyCharacteristic = require('./local-camera-proxy-characteristic')
 
 function DeviceService (initialStatusObject, stateChangedEmitter) {
   DeviceService.super_.call(this, {
@@ -20,7 +21,8 @@ function DeviceService (initialStatusObject, stateChangedEmitter) {
       new IoTConnectedCharacteristic(initialStatusObject, stateChangedEmitter),
       new LocalIpsCharacteristic(initialStatusObject, stateChangedEmitter),
       new ExternalIpCharacteristic(initialStatusObject, stateChangedEmitter),
-      new PendingUploadCountCharacteristic(initialStatusObject, stateChangedEmitter)
+      new PendingUploadCountCharacteristic(initialStatusObject, stateChangedEmitter),
+      new LocalCameraProxyCharacteristic(initialStatusObject, stateChangedEmitter)
     ]
   })
 }

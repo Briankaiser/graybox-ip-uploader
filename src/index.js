@@ -87,6 +87,8 @@ const localConfigReader = require('./local-config-reader')
     if (msg.type === 'StatusUpdate') {
       ProcessStatusUpdate(msg)
       return
+    } else if (msg.type === 'RequestDeviceStateChange') {
+      logger.info(msg, 'bluetooth requested a device state change!')
     }
   }
 
