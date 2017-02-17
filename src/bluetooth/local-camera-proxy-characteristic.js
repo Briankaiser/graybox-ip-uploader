@@ -6,16 +6,17 @@ var Characteristic = bleno.Characteristic
 var LocalCameraProxyCharacteristic = function (initialStatusObject, stateChangedEmitter) {
   LocalCameraProxyCharacteristic.super_.call(this, {
     uuid: '2A89',
-    properties: ['read, write'], // this could also be a notify if we wanted
+    properties: ['read, write', 'writeWithoutResponse'],
     descriptors: [
       new Descriptor({
         uuid: '2901',
-        value: 'Gets and sets boolean if local camera proxy is activated'
+        value: 'Gets/sets boolean if local camera proxy is activated'
       })
     ]
   })
   this.status = initialStatusObject
   this._value = new Buffer(0)
+  this._updateValueCallback = null
   stateChangedEmitter.on('statusChanged', (newStatus) => { this.status = newStatus })
 }
 
