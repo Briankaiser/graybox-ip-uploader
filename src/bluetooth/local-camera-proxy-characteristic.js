@@ -24,9 +24,8 @@ util.inherits(LocalCameraProxyCharacteristic, Characteristic)
 
 LocalCameraProxyCharacteristic.prototype.onReadRequest = function (offset, callback) {
   if (!offset) {
-    const tmpValue = this.status && this.status.localCameraProxy ? 1 : 0
-    this._value = new Buffer(1)
-    this._value.writeUInt8(tmpValue, 0)
+    const tmpValue = this.status && this.status.localCameraProxy ? 'true' : 'false'
+    this._value = new Buffer(tmpValue)
   }
   callback(this.RESULT_SUCCESS, this._value.slice(offset, this._value.length))
 }
@@ -44,7 +43,7 @@ LocalCameraProxyCharacteristic.prototype.onWriteRequest = function (data, offset
       this._value.writeUInt8(shouldActivate, 0)
       process.send({
         type: 'RequestDeviceStateChange',
-        msg: {
+        payload: {
           localCameraProxy: !!shouldActivate
         }
       })

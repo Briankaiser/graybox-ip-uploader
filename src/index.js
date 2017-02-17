@@ -98,7 +98,6 @@ const localConfigReader = require('./local-config-reader')
   function onBluetoothMessage (msg) {
     if (msg.type === 'StatusUpdate') {
       ProcessStatusUpdate(msg)
-      return
     } else if (msg.type === 'RequestDeviceStateChange') {
       RequestDeviceStateChange(msg.payload)
     }
@@ -191,10 +190,4 @@ const localConfigReader = require('./local-config-reader')
         }
       })
 
-  setTimeout(function () {
-    // sending sample message
-    RequestDeviceStateChange({
-      localCameraProxy: true
-    })
-  }, 20000)
 })()
