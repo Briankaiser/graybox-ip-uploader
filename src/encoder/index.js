@@ -11,10 +11,12 @@ const _ = require('lodash')
   let ffmpegProcess
   let logger
   let ignoreNextError = false
+  let ffmpegStarting = false
 
   process.on('exit', function () {
     if (ffmpegProcess) {
       ignoreNextError = true
+      ffmpegStarting = false
       ffmpegProcess.kill()
       ffmpegProcess = null
     }
@@ -38,6 +40,7 @@ const _ = require('lodash')
     const outputFile = path.join(localConfig.tmpDirectory, '/video/', 'output%Y-%m-%d_%H-%M-%S.ts')
     const inputFile = getInput(localConfig, deviceState)
     ignoreNextError = false
+    ffmpegStarting = true
     ffmpegProcess = ffmpeg(inputFile)
                           .format('segment')
                           .outputOptions([
@@ -50,12 +53,14 @@ const _ = require('lodash')
                             '-c copy'
                           ])
                           .on('start', function () {
+                            ffmpegStarting = false
                             logger.info({
                               input: inputFile,
                               output: outputFile
                             }, 'ffmpeg started.')
                           })
                           .on('error', function (err, stdout, stderr) {
+                            ffmpegStarting = false
                             // if graceful exit (ie remote encoder stop)
                             if (ignoreNextError) {
                               ignoreNextError = false
@@ -76,6 +81,7 @@ const _ = require('lodash')
                             }
                           })
                           .on('end', function () {
+                            ffmpegStarting = false
                             logger.info({
                               input: inputFile,
                               output: outputFile
@@ -94,6 +100,7 @@ const _ = require('lodash')
   function stopEncoder () {
     if (ffmpegProcess) {
       ignoreNextError = true
+      ffmpegStarting = false
       ffmpegProcess.kill()
       ffmpegProcess = null
     }
@@ -121,8 +128,10 @@ const _ = require('lodash')
 
   function ProcessUpdatedDeviceState (state) {
     deviceState = state
-    if (deviceState.encoderEnabled && !ffmpegProcess) {
+    // if it should be running, and it isn't currently starting, and it isn't current running - start it
+    if (deviceState.encoderEnabled && !ffmpegStarting && !ffmpegProcess) {
       startEncoder()
+    // if it should be off - but it is currently running - stop it
     } else if (!deviceState.encoderEnabled && !!ffmpegProcess) {
       stopEncoder()
     }
