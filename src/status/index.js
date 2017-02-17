@@ -87,7 +87,7 @@ const lookupAsync = promisify(dns.lookup)
           _.chain(os.networkInterfaces())
           .flatMap()
           .filter(function (ni) {
-            return !ni.internal && ni.family === 'IPv4' && !ni.address.startsWith('169.254.')
+            return !ni.internal && ni.family === 'IPv4'
           }).map(function (ni) {
             return ni.address
           }).join(', ')
