@@ -10,7 +10,6 @@ const _ = require('lodash')
 const promisify = deferred.promisify
 const lookupAsync = promisify(dns.lookup)
 
-
 ;(function () {
   let localConfig = {}
   let deviceState = {}
@@ -98,7 +97,7 @@ const lookupAsync = promisify(dns.lookup)
     }
 
     async.parallel(async.reflectAll(tasks),
-      function (err, results) {
+      function (err, results) { // eslint-disable-line handle-callback-err
         const statusObj = {
           deviceId: localConfig.deviceId,
           internalIps: results.internalIpsTask.value,

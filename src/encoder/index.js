@@ -75,21 +75,21 @@ const _ = require('lodash')
                               }, 5000)
                             }
                           })
-                          .on('end', function() {
+                          .on('end', function () {
                             logger.info({
                               input: inputFile,
-                              output: outputFile,
-                            },'ffmpeg ended.')
+                              output: outputFile
+                            }, 'ffmpeg ended.')
 
-                            //attempt to restart ffmpeg if applicable
-                            if(deviceState.encoderEnabled) {
-                              ffmpegProcess = null;
-                              setTimeout(function() {
-                                startEncoder();
-                              }, 10000);
+                            // attempt to restart ffmpeg if applicable
+                            if (deviceState.encoderEnabled) {
+                              ffmpegProcess = null
+                              setTimeout(function () {
+                                startEncoder()
+                              }, 10000)
                             }
                           })
-                          .save(outputFile);
+                          .save(outputFile)
   }
   function stopEncoder () {
     if (ffmpegProcess) {
@@ -99,61 +99,55 @@ const _ = require('lodash')
     }
   }
 
-  function init(config) {
-    localConfig = config;
+  function init (config) {
+    localConfig = config
     logger = bunyan.createLogger({
       name: 'encoder-log',
       deviceId: localConfig.deviceId,
       streams: [{
-          type: 'rotating-file',
-          level: 'info',
-          path: path.join(config.loggingPath, 'encoder-log.log'),
-          period: '1d',   // daily rotation
-          count: 3        // keep 3 back copies
+        type: 'rotating-file',
+        level: 'info',
+        path: path.join(config.loggingPath, 'encoder-log.log'),
+        period: '1d',   // daily rotation
+        count: 3        // keep 3 back copies
       },
       {
         stream: process.stdout,
         level: 'debug'
       }]
-    });
-    mkdirp(path.join(localConfig.tmpDirectory, '/video/'));
-
+    })
+    mkdirp(path.join(localConfig.tmpDirectory, '/video/'))
   }
 
-  function ProcessUpdatedDeviceState(state) {
-    deviceState = state;
-    if(deviceState.encoderEnabled && !ffmpegProcess) {
-      startEncoder();
-    }else if(!deviceState.encoderEnabled && !!ffmpegProcess) {
-      stopEncoder();
+  function ProcessUpdatedDeviceState (state) {
+    deviceState = state
+    if (deviceState.encoderEnabled && !ffmpegProcess) {
+      startEncoder()
+    } else if (!deviceState.encoderEnabled && !!ffmpegProcess) {
+      stopEncoder()
     }
   }
-  function buildEncoderStatusMessage() {
+  function buildEncoderStatusMessage () {
     return {
       type: 'StatusUpdate',
       payload: {
-        ffmpegRunning: !!ffmpegProcess,  
+        ffmpegRunning: !!ffmpegProcess
       }
     }
   }
 
-  process.on('message', function(msg) {
-    if (!msg) return;
+  process.on('message', function (msg) {
+    if (!msg) return
 
     if (msg.type === 'Init') {
-      init(msg.payload);
+      init(msg.payload)
     } else if (msg.type === 'DeviceStateChanged') {
-      ProcessUpdatedDeviceState(msg.payload);
+      ProcessUpdatedDeviceState(msg.payload)
     }
   })
 
-
-
-  let statusInterval = setInterval(function() {
-    process.send(buildEncoderStatusMessage());
-  }, 10000);
-
-
-
-})();
+  setInterval(function () {
+    process.send(buildEncoderStatusMessage())
+  }, 10000)
+})()
 

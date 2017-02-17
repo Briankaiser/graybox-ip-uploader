@@ -126,7 +126,6 @@ try {
     }
   }
 
-
   setInterval(function () {
     // report status
     process.send(buildBluetoothStatusMessage())

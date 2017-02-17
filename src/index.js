@@ -59,7 +59,7 @@ const localConfigReader = require('./local-config-reader')
       payload: msg.payload
     })
 
-    const bluetoothProcess = FindChildProcess(childProcesses, 'bluetooth');
+    const bluetoothProcess = FindChildProcess(childProcesses, 'bluetooth')
     if (!bluetoothProcess) return
 
     bluetoothProcess.send({
@@ -115,33 +115,32 @@ const localConfigReader = require('./local-config-reader')
       }]
     })
   }
-  function spawnRestartableProcess(processPath, messageHandler) {
-      let process = childProcessDebug.fork(processPath);
-      process.on('message', messageHandler);
-      //on failure - restart
-      process.on('exit', function(exitCode, signal) {
-        _.pull(childProcesses, process);
+  function spawnRestartableProcess (processPath, messageHandler) {
+    let process = childProcessDebug.fork(processPath)
+    process.on('message', messageHandler)
+    // on failure - restart
+    process.on('exit', function (exitCode, signal) {
+      _.pull(childProcesses, process)
 
-        // wait 10s and restart
-        setTimeout(function () {
-          logger.info({processPath: processPath}, 'restarting process')
-          spawnRestartableProcess(processPath, messageHandler)
-          // if iot is running and it has a state - it will rebroadcast
-          // if iot isn't running - on its own startup it will send out device state
-          const iotProcess = FindChildProcess(childProcesses, 'iot')
-          if (iotProcess) {
-            iotProcess.send({
-              type: 'RebroadcastRequest'
-            })
-          }
-        }, 10000)
-
-      });
-      childProcesses.push(process);
-      sendInitToProcess(process, localConfig);
-
+      // wait 10s and restart
+      setTimeout(function () {
+        logger.info({processPath: processPath}, 'restarting process')
+        spawnRestartableProcess(processPath, messageHandler)
+        // if iot is running and it has a state - it will rebroadcast
+        // if iot isn't running - on its own startup it will send out device state
+        const iotProcess = FindChildProcess(childProcesses, 'iot')
+        if (iotProcess) {
+          iotProcess.send({
+            type: 'RebroadcastRequest'
+          })
+        }
+      }, 10000)
+    })
+    childProcesses.push(process)
+    sendInitToProcess(process, localConfig)
   }
-  function mainCreateChildProcesses() {
+
+  function mainCreateChildProcesses () {
     // create child processes
     // spawn the encoder
     spawnRestartableProcess('./encoder/index.js', onEncoderMessage)
@@ -159,27 +158,18 @@ const localConfigReader = require('./local-config-reader')
     if (process.platform !== 'win32') {
       spawnRestartableProcess('./bluetooth/index.js', onBluetoothMessage)
     }
-
-  }
-  function mainInitProcesses() {
-      //init the processes
-      _.each(childProcesses, function(cp) {
-        SendInitToProcess(cp, localConfig);
-      });
   }
 
   // main process run path
   localConfigReader.load()
     .then(mainInitWithConfig)
     .then(mainCreateChildProcesses)
-    //.then(mainInitProcesses)
-    .done(function() {
-      }, function(err) {
-        if(logger) {
-          logger.error(err);
-        }else {
-          console.log(err);
+    .done(function () { },
+      function (err) {
+        if (logger) {
+          logger.error(err)
+        } else {
+          console.log(err)
         }
-      });
-
+      })
 })()
