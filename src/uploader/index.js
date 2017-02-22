@@ -75,6 +75,9 @@ const VALID_EXT = ['.mp4', '.ts']
           logger.debug(err, 'file is still busy. will retry')
         } else if (err.code === 'UnknownEndpoint') {
           logger.debug({code: err.code, message: err.message}, 'Cant connect to endpoint. Probably no internet')
+        } else if (err.name === 'RequestTimeTooSkewed') {
+          logger.info('Couldnt correct clock skew. Recreating uploader.')
+          setImmediate(initUploader)
         } else {
           logger.warn(err)
         }

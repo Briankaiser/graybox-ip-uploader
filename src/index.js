@@ -189,5 +189,4 @@ const localConfigReader = require('./local-config-reader')
           console.log(err)
         }
       })
-
 })()
