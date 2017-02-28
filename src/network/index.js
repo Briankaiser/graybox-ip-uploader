@@ -148,7 +148,7 @@ const IP_FORWARDING_PATH = '/proc/sys/net/ipv4/ip_forward'
     }
   })
 
-  statusInterval = setInterval(function () {
-    // update internal status
-  }, 10000)
+  // statusInterval = setInterval(function () {
+  //   // update internal status
+  // }, 10000)
 })()

@@ -123,7 +123,7 @@ const lookupAsync = promisify(dns.lookup)
     statusInterval = GatherInternalStatuses().done(function (fullStatus) {
       process.send({
         type: 'CompiledStatus',
-        payload: currentStatus
+        payload: fullStatus
       })
     }, function (err) {
       logger.warn(err, 'error compiling status')

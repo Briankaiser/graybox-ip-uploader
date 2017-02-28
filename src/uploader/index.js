@@ -18,7 +18,7 @@ const VALID_EXT = ['.mp4', '.ts']
   let s3Service
   let uploaderInterval
   let currentlyUploading = false
-  let lastCountPendingVideoFiles
+  let lastCountPendingVideoFiles, oldestFileName, newestFileName
   let videoPath
 
   function checkAndUploadNextFile () {
@@ -50,6 +50,9 @@ const VALID_EXT = ['.mp4', '.ts']
 
         lastCountPendingVideoFiles = toUploadList.length
         const toUpload = _.head(toUploadList)
+        oldestFileName = toUpload && toUpload.filename && path.basename(toUpload.filename)
+        const newestItem = _.last(toUploadList)
+        newestFileName = newestItem && newestItem.filename && path.basename(newestItem.filename)
         return toUpload && toUpload.filename
       }).then(function (toUpload) {
         if (!toUpload) return
@@ -152,7 +155,9 @@ const VALID_EXT = ['.mp4', '.ts']
       type: 'StatusUpdate',
       payload: {
         filesPendingUpload: lastCountPendingVideoFiles,
-        isUploaderRunning: !!uploaderInterval
+        isUploaderRunning: !!uploaderInterval,
+        oldestFileName: oldestFileName,
+        newestFileName: newestFileName
       }
     }
   }
