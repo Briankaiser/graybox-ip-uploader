@@ -137,6 +137,11 @@ namespace Graybox
                     result = await GetDeviceState(serviceEndpoint, boxId);
                     break;
                 }
+                case "set-device-state":
+                {
+                    result = await SetDeviceState(serviceEndpoint, boxId, commandText);
+                    break;
+                }
             }
             await SendResultToSlack(responseUrl, result);
         }
@@ -147,9 +152,38 @@ namespace Graybox
             var t = await client.DescribeEndpointAsync();
             return t.EndpointAddress;
         }
+        private async Task<string> SetDeviceState(string serviceEndpoint, string boxId, string commandText)
+        {
+            //validate input {boxId} {command} {parameter} {value}
+            var splitCommand = commandText.Split(' ');
+            if(splitCommand.Length < 4)
+            {
+                return "Invalid set command. Too few arguments";
+            }
+            var parameter = splitCommand[2];
+            if(!IsValidSetStateParameter(parameter))
+            {
+                return "Invalid set command. Invalid parameter: " + parameter;             
+            }
+            var value = string.Join(" ", splitCommand.Skip(3));
+
+            if(!IsValidParameterValue(value))
+            {
+                return "Invalid set command. Must be boolean, int, or string. If string - then in quotes";
+            }
+
+            return parameter + " : " + value;
+
+
+            var client = new AmazonIotDataClient("https://" + serviceEndpoint);
+            await client.UpdateThingShadowAsync(new UpdateThingShadowRequest()
+            {
+                ThingName = boxId
+            });
+        }
         private async Task<string> GetDeviceState(string serviceEndpoint, string boxId)
         {
-            AmazonIotDataClient client = new AmazonIotDataClient("https://"+serviceEndpoint);
+            var client = new AmazonIotDataClient("https://" + serviceEndpoint);
             var result = await client.GetThingShadowAsync(new GetThingShadowRequest()
             {
                 ThingName = boxId
@@ -210,6 +244,23 @@ namespace Graybox
                 }
            
             }
+        }
+        private static bool IsValidSetStateParameter(string parameter)
+        {
+            var props = System.Reflection.TypeExtensions.GetProperties(typeof(DesiredStateObject));
+            var propNames = props.Select(p=>p.Name).ToList();
+            return propNames.Contains(parameter);
+        }
+        private static bool IsValidParameterValue(string value)
+        {
+            bool tmpBool;
+            int tmpInt;
+            if(bool.TryParse(value, out tmpBool)) return true;
+            if(int.TryParse(value, out tmpInt)) return true;
+
+            if(value.StartsWith("\"") && value.EndsWith("\"")) return true;
+
+            return false;
         }
     }
 
