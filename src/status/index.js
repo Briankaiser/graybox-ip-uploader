@@ -128,5 +128,5 @@ const lookupAsync = promisify(dns.lookup)
     }, function (err) {
       logger.warn(err, 'error compiling status')
     })
-  }, 10000)
+  }, 30000)
 })()
