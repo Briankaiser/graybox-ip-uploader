@@ -82,7 +82,7 @@ namespace Graybox
             var response = new APIGatewayProxyResponse
             {
                 StatusCode = (int)HttpStatusCode.OK,
-                Body = "Request has been successfully sent",
+                Body = "Okay!",
                 Headers = new Dictionary<string, string> { { "Content-Type", "text/plain" } }
             };
 
@@ -139,7 +139,7 @@ namespace Graybox
                 }
                 case "set-device-state":
                 {
-                    result = await SetDeviceState(serviceEndpoint, boxId, commandText);
+                    result = await SetDeviceState(serviceEndpoint, boxId, commandText, context);
                     break;
                 }
             }
@@ -152,7 +152,7 @@ namespace Graybox
             var t = await client.DescribeEndpointAsync();
             return t.EndpointAddress;
         }
-        private async Task<string> SetDeviceState(string serviceEndpoint, string boxId, string commandText)
+        private async Task<string> SetDeviceState(string serviceEndpoint, string boxId, string commandText, ILambdaContext context)
         {
             //validate input {boxId} {command} {parameter} {value}
             var splitCommand = commandText.Split(' ');
@@ -169,17 +169,39 @@ namespace Graybox
 
             if(!IsValidParameterValue(value))
             {
-                return "Invalid set command. Must be boolean, int, or string. If string - then in quotes";
+                return "Invalid set command. Value must be boolean, int, or string. If string - then in quotes. Value: " + value;
             }
 
-            return parameter + " : " + value;
+            var str = new StringBuilder();
+            str.AppendLine("{");
+            str.AppendLine("  \"state\": {");
+            str.AppendLine("    \"desired\": {");
+            str.AppendLine("      \"" + parameter + "\": " + value);
+            str.AppendLine("    }");
+            str.AppendLine("  }");
+            str.AppendLine("}");
 
+            var jsonRequest = str.ToString();
+            context.Logger.LogLine("attempting to set state to: \n " + jsonRequest);
 
             var client = new AmazonIotDataClient("https://" + serviceEndpoint);
-            await client.UpdateThingShadowAsync(new UpdateThingShadowRequest()
+            using(var memStream = new MemoryStream())
             {
-                ThingName = boxId
-            });
+                using(StreamWriter wr = new StreamWriter(memStream))
+                {
+                    wr.Write(jsonRequest);
+                    wr.Flush();
+                    memStream.Position = 0;
+                    await client.UpdateThingShadowAsync(new UpdateThingShadowRequest()
+                    {
+                        ThingName = boxId,
+                        Payload = memStream,
+                    });
+                }
+
+            }
+
+            return "Update successful." + parameter + " : " + value;
         }
         private async Task<string> GetDeviceState(string serviceEndpoint, string boxId)
         {
@@ -200,25 +222,25 @@ namespace Graybox
             str.AppendLine();
             str.AppendLine("Device State (adjustable): " + boxId);
             str.AppendLine("---------------------------");
-            str.AppendLine("cameraIp: " + desired.cameraIp);
-            str.AppendLine("cameraPort: " + desired.cameraPort);
+            str.AppendLine("cameraIp: \"" + desired.cameraIp + "\"");
+            str.AppendLine("cameraPort: \"" + desired.cameraPort+ "\"");
             str.AppendLine("encoderEnabled: " + desired.encoderEnabled);
-            str.AppendLine("rtmpStreamPath: " + desired.rtmpStreamPath);
+            str.AppendLine("rtmpStreamPath: \"" + desired.rtmpStreamPath+ "\"");
             str.AppendLine("localCameraProxy: " + desired.localCameraProxy);
             str.AppendLine();
             str.AppendLine("Device Status (reported): " + boxId);
             str.AppendLine("---------------------------");
-            str.AppendLine("deviceId: " + reported.deviceId);
+            str.AppendLine("deviceId: \"" + reported.deviceId+ "\"");
             str.AppendLine("ffmpegRunning: " + reported.ffmpegRunning);
             str.AppendLine("isUploaderRunning: " + reported.isUploaderRunning);
             str.AppendLine("iotConnected: " + reported.iotConnected);    
             str.AppendLine("cameraPing: " + reported.cameraPing);        
             str.AppendLine("filesPendingUpload: " + reported.filesPendingUpload);
-            str.AppendLine("oldestFileName: " + reported.oldestFileName);
-            str.AppendLine("newestFileName: " + reported.newestFileName);
-            str.AppendLine("internalIps: " + reported.internalIps);
+            str.AppendLine("oldestFileName: \"" + reported.oldestFileName+ "\"");
+            str.AppendLine("newestFileName: \"" + reported.newestFileName+ "\"");
+            str.AppendLine("internalIps: \"" + reported.internalIps+ "\"");
             str.AppendLine("freeMemory: " + reported.freeMemory);
-            str.AppendLine("loadAverage: " + reported.loadAverage);
+            str.AppendLine("loadAverage: \"" + reported.loadAverage+ "\"");
             str.AppendLine();
             
             return str.ToString();
