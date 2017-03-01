@@ -58,3 +58,7 @@ typings/
 config/local-config.yaml
 certs/*.pem
 certs/*.key
+
+#.NET Core
+bin/
+obj/

@@ -1,0 +1,39 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Transform" : "AWS::Serverless-2016-10-31",
+  "Description" : "An AWS Serverless Application.",
+
+  "Resources" : {
+
+    "Get" : {
+      "Type" : "AWS::Serverless::Function",
+      "Properties": {
+        "Handler": "graybox-device-state-lambda::Graybox.Functions::Get",
+        "Runtime": "dotnetcore1.0",
+        "CodeUri": "",
+        "MemorySize": 128,
+        "Timeout": 30,
+        "Role": null,
+        "Environment": {
+          "Variables": {
+            "SlackKey":"XXXXX"
+          }
+        }
+        "Policies": [ "AWSLambdaBasicExecutionRole", "AWSIoTDataAccess", "AWSIoTConfigReadOnlyAccess","AWSLambdaInvocation-DynamoDB" ],
+        "Events": {
+          "PutResource": {
+            "Type": "Api",
+            "Properties": {
+              "Path": "/",
+              "Method": "GET"
+            }
+          }
+        }
+      }
+    }
+
+  },
+
+  "Outputs" : {
+  }
+}
