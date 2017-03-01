@@ -158,16 +158,33 @@ namespace Graybox
 
             var state = s.Deserialize<GrayboxDeviceState>(result.Payload);
             var desired = state.state.desired;
+            if(desired == null) desired = new DesiredStateObject();
+            var reported = state.state.reported;
+            if(reported == null) reported = new ReportedStateObject();
 
             StringBuilder str = new StringBuilder();
             str.AppendLine();
-            str.AppendLine("Device State: " + boxId);
-            str.AppendLine("==========================");
+            str.AppendLine("Device State (adjustable): " + boxId);
+            str.AppendLine("---------------------------");
             str.AppendLine("cameraIp: " + desired.cameraIp);
             str.AppendLine("cameraPort: " + desired.cameraPort);
-            str.AppendLine("encoderEnabled: " + desired.encoderEnabled.ToString());
+            str.AppendLine("encoderEnabled: " + desired.encoderEnabled);
             str.AppendLine("rtmpStreamPath: " + desired.rtmpStreamPath);
             str.AppendLine("localCameraProxy: " + desired.localCameraProxy);
+            str.AppendLine();
+            str.AppendLine("Device Status (reported): " + boxId);
+            str.AppendLine("---------------------------");
+            str.AppendLine("deviceId: " + reported.deviceId);
+            str.AppendLine("ffmpegRunning: " + reported.ffmpegRunning);
+            str.AppendLine("isUploaderRunning: " + reported.isUploaderRunning);
+            str.AppendLine("iotConnected: " + reported.iotConnected);    
+            str.AppendLine("cameraPing: " + reported.cameraPing);        
+            str.AppendLine("filesPendingUpload: " + reported.filesPendingUpload);
+            str.AppendLine("oldestFileName: " + reported.oldestFileName);
+            str.AppendLine("newestFileName: " + reported.newestFileName);
+            str.AppendLine("internalIps: " + reported.internalIps);
+            str.AppendLine("freeMemory: " + reported.freeMemory);
+            str.AppendLine("loadAverage: " + reported.loadAverage);
             str.AppendLine();
             
             return str.ToString();
@@ -203,6 +220,21 @@ namespace Graybox
     internal class InternalState
     {
         public DesiredStateObject desired {get;set;}
+        public ReportedStateObject reported {get;set;}
+    }
+    internal class ReportedStateObject
+    {
+        public bool ffmpegRunning {get;set;}
+        public int filesPendingUpload {get;set;}
+        public bool isUploaderRunning {get;set;}
+        public string oldestFileName {get;set;}
+        public string newestFileName {get;set;}
+        public bool iotConnected {get;set;}
+        public string deviceId {get;set;}
+        public string internalIps {get;set;}
+        public string freeMemory {get;set;}
+        public string loadAverage {get;set;}
+        public bool cameraPing {get;set;}
     }
     internal class DesiredStateObject 
     {

@@ -118,10 +118,17 @@ const writeFileAsync = promisify(fs.writeFile)
   }
 
   function PostCompiledStatusToIoT (payload) {
-    logger.debug(payload, 'status message')
     if (!connected) return
 
-    thingShadows.publish('device-status', JSON.stringify(payload))
+    const strPayload = JSON.stringify(payload)
+    thingShadows.publish('device-status', strPayload)
+
+    lastUpdateClientToken = thingShadows.update(localConfig.deviceId, {
+      state: {
+        reported: payload
+      }
+    })
+    logger.debug({payload: payload, clientToken: lastUpdateClientToken}, 'sending device state reported update')
   }
 
   function init (config) {
