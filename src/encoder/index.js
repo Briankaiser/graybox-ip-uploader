@@ -108,13 +108,13 @@ const fs = require('fs')
 
   function startSnapshot () {
     if (snapshotInterval) return
-
+    logger.info('Starting snapshot interval')
     snapshotInterval = setInterval(takeSnapshot, 10000)
   }
 
   function stopSnapshot () {
     if (!snapshotInterval) return
-
+    logger.info('Stopping snapshot interval')
     clearInterval(snapshotInterval)
   }
 
@@ -124,6 +124,8 @@ const fs = require('fs')
     }
     const utcms = new Date().getTime()
     const imagePath = path.join(localConfig.tmpDirectory, '/video/', 'snapshot-' + utcms + '.jpg')
+
+    logger.debug(imagePath, 'taking snapshot')
 
     const file = fs.createWriteStream(imagePath)
     http.get({
