@@ -225,6 +225,9 @@ namespace Graybox
             str.AppendLine("• encoderEnabled: " + desired.encoderEnabled);
             str.AppendLine("• rtmpStreamPath: \"" + desired.rtmpStreamPath+ "\"");
             str.AppendLine("• localCameraProxy: " + desired.localCameraProxy);
+            str.AppendLine("• snapshotEnabled: " + desired.snapshotEnabled);
+            str.AppendLine("• snapshotPort: \"" + desired.snapshotPort+ "\"");
+            str.AppendLine("• snapshotPath: \"" + desired.snapshotPath+ "\"");
             str.AppendLine();
             str.AppendLine("*Device Status (reported): " + boxId + "*");
             str.AppendLine("---------------------------");
@@ -239,6 +242,7 @@ namespace Graybox
             str.AppendLine("• internalIps: \"" + reported.internalIps+ "\"");
             str.AppendLine("• freeMemory: " + reported.freeMemory);
             str.AppendLine("• loadAverage: \"" + reported.loadAverage+ "\"");
+            str.AppendLine("• lastSnapshotUrl: \"" + reported.lastSnapshotUrl+ "\"");
             str.AppendLine();
             
             return str.ToString();
@@ -335,6 +339,7 @@ namespace Graybox
         public string freeMemory {get;set;}
         public string loadAverage {get;set;}
         public bool cameraPing {get;set;}
+        public string lastSnapshotUrl {get;set;}
     }
     internal class DesiredStateObject 
     {
@@ -343,6 +348,9 @@ namespace Graybox
         public string cameraPort {get;set;}
         public string rtmpStreamPath {get;set;}
         public bool localCameraProxy {get;set;}
+        public bool snapshotEnabled {get;set;}
+        public string snapshotPort {get;set;}
+        public string snapshotPath {get;set;}
 
     }
 

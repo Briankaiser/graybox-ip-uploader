@@ -123,7 +123,7 @@ const fs = require('fs')
       return
     }
     const utcms = new Date().getTime()
-    const imagePath = path.join(localConfig.tmpDirectory, '/video/', 'snapshot-' + utcms + '.ts')
+    const imagePath = path.join(localConfig.tmpDirectory, '/video/', 'snapshot-' + utcms + '.jpg')
 
     const file = fs.createWriteStream(imagePath)
     http.get({
