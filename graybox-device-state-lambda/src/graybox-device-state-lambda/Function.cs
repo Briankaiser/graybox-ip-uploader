@@ -199,7 +199,7 @@ namespace Graybox
 
             }
 
-            return "*Update successful." + parameter + " : " + value + "*";
+            return "*Update successful. " + parameter + " : " + value + "*";
         }
         private async Task<string> GetDeviceState(string serviceEndpoint, string boxId)
         {

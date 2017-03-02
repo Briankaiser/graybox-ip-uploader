@@ -4,6 +4,8 @@ const path = require('path')
 const buildUrl = require('build-url')
 const mkdirp = require('mkdirp')
 const _ = require('lodash')
+const http = require('http')
+const fs = require('fs')
 
 ;(function () {
   let localConfig = {}
@@ -11,12 +13,16 @@ const _ = require('lodash')
   let ffmpegProcess
   let logger
   let ignoreNextError = false
+  let snapshotInterval
 
   process.on('exit', function () {
     if (ffmpegProcess) {
       ignoreNextError = true
       ffmpegProcess.kill()
       ffmpegProcess = null
+    }
+    if (snapshotInterval) {
+      clearInterval(snapshotInterval)
     }
   })
 
@@ -100,6 +106,43 @@ const _ = require('lodash')
     }
   }
 
+  function startSnapshot () {
+    if (snapshotInterval) return
+
+    snapshotInterval = setInterval(takeSnapshot, 10000)
+  }
+
+  function stopSnapshot () {
+    if (!snapshotInterval) return
+
+    clearInterval(snapshotInterval)
+  }
+
+  function takeSnapshot () {
+    if (!deviceState.snapshotEnabled || !deviceState.snapshotPath || !deviceState.snapshotPort) {
+      return
+    }
+    const utcms = new Date().getTime()
+    const imagePath = path.join(localConfig.tmpDirectory, '/video/', 'snapshot-' + utcms + '.ts')
+
+    const file = fs.createWriteStream(imagePath)
+    http.get({
+      protocol: 'http:',
+      hostname: deviceState.cameraIp,
+      port: deviceState.snapshotPort,
+      path: deviceState.snapshotPath,
+      timeout: 2000
+    }, function (response) {
+      response.pipe(file)
+      file.on('finish', function () {
+        file.close()
+      })
+    }).on('error', function (err) {
+      console.log(err)
+      fs.unlink(imagePath)
+    })
+  }
+
   function init (config) {
     localConfig = config
     logger = bunyan.createLogger({
@@ -128,6 +171,12 @@ const _ = require('lodash')
     // if it should be off - but it is currently running - stop it
     } else if (!deviceState.encoderEnabled && !!ffmpegProcess) {
       stopEncoder()
+    }
+
+    if (deviceState.snapshotEnabled && !snapshotInterval) {
+      startSnapshot()
+    } else if (!deviceState.snapshotEnabled && snapshotInterval) {
+      stopSnapshot()
     }
   }
   function buildEncoderStatusMessage () {

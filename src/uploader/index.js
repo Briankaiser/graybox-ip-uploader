@@ -9,7 +9,7 @@ const promisify = deferred.promisify
 const readDirAsync = promisify(fs.readdir)
 const unlinkAsync = promisify(fs.unlink)
 
-const VALID_EXT = ['.mp4', '.ts']
+const VALID_EXT = ['.mp4', '.ts', '.jpg']
 
 ;(function () {
   let localConfig = {}
@@ -19,6 +19,7 @@ const VALID_EXT = ['.mp4', '.ts']
   let uploaderInterval
   let currentlyUploading = false
   let lastCountPendingVideoFiles, oldestFileName, newestFileName
+  let lastSnapshotUrl
   let videoPath
 
   function checkAndUploadNextFile () {
@@ -60,16 +61,25 @@ const VALID_EXT = ['.mp4', '.ts']
         logger.debug(toUpload, 'Starting upload')
         const fileKey = path.join(localConfig.deviceId, path.basename(toUpload))
 
+        const acl = path.extname(toUpload) === '.jpg' ? 'public-read' : 'private'
+        const uploadFs = fs.createReadStream(toUpload)
         // upload then delete
         // build the promise chain here so we have the file name, report status
         return s3Service.upload({
           Bucket: deviceState.uploadBucket,
           Key: fileKey,
-          ACL: 'private',
-          Body: fs.createReadStream(toUpload)
+          ACL: acl,
+          Body: uploadFs
         }).promise()
-          .then(() => unlinkAsync(toUpload)) // delete file on successful upload
-          .then(() => logger.info(toUpload, 'successfully uploaded and deleted'))
+          .then(() => {
+            return unlinkAsync(toUpload)
+          }) // delete file on successful upload
+          .then(() => {
+            logger.info(toUpload, 'successfully uploaded and deleted')
+            if (path.extname(toUpload) === '.jpg') {
+              lastSnapshotUrl = 'http://' + deviceState.uploadBucket + '.s3.amazonaws.com/' + fileKey
+            }
+          })
       })
       .done(function () {
         currentlyUploading = false
@@ -157,7 +167,8 @@ const VALID_EXT = ['.mp4', '.ts']
         filesPendingUpload: lastCountPendingVideoFiles,
         isUploaderRunning: !!uploaderInterval,
         oldestFileName: oldestFileName,
-        newestFileName: newestFileName
+        newestFileName: newestFileName,
+        lastSnapshotUrl: lastSnapshotUrl
       }
     }
   }

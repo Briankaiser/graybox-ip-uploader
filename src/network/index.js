@@ -6,6 +6,7 @@ const childProcess = require('child_process')
 
 const IPTABLES_TABLE = 'nat'
 const IPTABLES_CHAIN = 'PREROUTING'
+const POST_CHAIN = 'POSTROUTING'
 const IP_FORWARDING_PATH = '/proc/sys/net/ipv4/ip_forward'
 
 ;(function () {
@@ -54,8 +55,7 @@ const IP_FORWARDING_PATH = '/proc/sys/net/ipv4/ip_forward'
     const args = [
       '-t',
       IPTABLES_TABLE,
-      '-F',
-      IPTABLES_CHAIN
+      '-F'
     ]
     return executeIpTablesCommand(args)
   }
@@ -76,6 +76,17 @@ const IP_FORWARDING_PATH = '/proc/sys/net/ipv4/ip_forward'
       'DNAT',
       '--to-destination',
       cameraIpAndPort
+    ]
+    return executeIpTablesCommand(args)
+  }
+  function executeAddReturnMasquerade () {
+    const args = [
+      '-t',
+      IPTABLES_TABLE,
+      '-A',
+      POST_CHAIN,
+      '-j', // jump. destination routing area?
+      'MASQUERADE'
     ]
     return executeIpTablesCommand(args)
   }
@@ -100,6 +111,7 @@ const IP_FORWARDING_PATH = '/proc/sys/net/ipv4/ip_forward'
     .then(() => executeAddCameraForwardPort(80))
     .then(() => executeAddCameraForwardPort(554))
     .then(() => executeAddCameraForwardPort(8091))
+    .then(() => executeAddReturnMasquerade())
     .done(function () {
       logger.info('successfully created proxy chain')
     }, function (err) {

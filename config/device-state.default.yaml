@@ -1,7 +1,10 @@
 encoderEnabled:
+snapshotEnabled:
 cameraIp:
 cameraPort:
+snapshotPort:
 rtmpStreamPath:
+snapshotPath:
 accessKey:
 secretKey:
 localCameraProxy:
