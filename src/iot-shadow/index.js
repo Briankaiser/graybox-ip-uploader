@@ -56,7 +56,7 @@ const writeFileAsync = promisify(fs.writeFile)
       logger.info('aws iot message', topic, payload)
     })
     thingShadows.on('delta', function (thingName, stateObject) {
-      logger.debug('aws iot delta', thingName, stateObject)
+      // logger.debug('aws iot delta', thingName, stateObject)
       connected = true
       process.send({
         type: 'DeviceStateChanged',
@@ -64,7 +64,6 @@ const writeFileAsync = promisify(fs.writeFile)
       })
     })
     thingShadows.on('status', function (thingName, statusType, clientToken, stateObject) {
-      logger.debug('awsstatus', thingName, statusType, clientToken, stateObject)
       connected = true
       // if this is a response to our update request - then log it and return
       // the 'delta' handler will process the update
@@ -73,6 +72,7 @@ const writeFileAsync = promisify(fs.writeFile)
         logger.debug('update request successful', clientToken)
         return
       }
+      logger.debug('awsstatus', thingName, statusType, clientToken, stateObject)
       if (statusType === 'accepted' && thingName === localConfig.deviceId) {
         // set device state
         process.send({
@@ -128,7 +128,7 @@ const writeFileAsync = promisify(fs.writeFile)
         reported: payload
       }
     })
-    logger.debug({payload: payload, clientToken: lastUpdateClientToken}, 'sending device state reported update')
+    // logger.debug({payload: payload, clientToken: lastUpdateClientToken}, 'sending device state reported update')
   }
 
   function init (config) {
