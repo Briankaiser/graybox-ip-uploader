@@ -6,6 +6,7 @@ const deferred = require('deferred')
 const async = require('async')
 const ping = require('ping')
 const _ = require('lodash')
+const childProcess = require('child_process')
 
 const promisify = deferred.promisify
 const lookupAsync = promisify(dns.lookup)
@@ -71,12 +72,13 @@ const lookupAsync = promisify(dns.lookup)
     // look up external IP
     const tasks = {
       externalIpTask: async.timeout(function (callback) {
-        lookupAsync('myip.opendns.com', {family: 4})
-              .done(function (addresses) {
-                callback(null, addresses[0])
-              }, function (err) {
-                callback(err)
-              })
+        childProcess.execFile('dig', ['+short', 'myip.opendns.com', '@resolver1.opendns.com'], function (err, stdout, stderr) {
+          if (err) {
+            callback(err)
+          } else {
+            callback(stdout.trim())
+          }
+        })
       }, 2000),
       cameraPingTask: async.timeout(function (callback) {
         // camera ping

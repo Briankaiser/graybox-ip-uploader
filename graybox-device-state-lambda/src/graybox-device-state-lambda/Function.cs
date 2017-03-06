@@ -137,6 +137,11 @@ namespace Graybox
                     result = await GetDeviceState(serviceEndpoint, boxId);
                     break;
                 }
+                case "get-debug":
+                {
+                    result = await GetDeviceState(serviceEndpoint, boxId, true);
+                    break;
+                }
                 case "set-device-state":
                 case "set":
                 {
@@ -203,13 +208,21 @@ namespace Graybox
 
             return "*Update successful. " + parameter + " : " + value + "*";
         }
-        private async Task<string> GetDeviceState(string serviceEndpoint, string boxId)
+        private async Task<string> GetDeviceState(string serviceEndpoint, string boxId, bool debug = false)
         {
             var client = new AmazonIotDataClient("https://" + serviceEndpoint);
             var result = await client.GetThingShadowAsync(new GetThingShadowRequest()
             {
                 ThingName = boxId
             });
+
+            if(debug == true) 
+            {
+                using(StreamReader rdr = new StreamReader(result.Payload))
+                {
+                    return await rdr.ReadToEndAsync();
+                }
+            }
             JsonSerializer s = new JsonSerializer();
 
             var state = s.Deserialize<GrayboxDeviceState>(result.Payload);
@@ -217,7 +230,14 @@ namespace Graybox
             if(desired == null) desired = new DesiredStateObject();
             var reported = state.state.reported;
             if(reported == null) reported = new ReportedStateObject();
-
+            var metadata = state.metadata;
+            if(metadata == null) metadata = new MetadataStateObject();
+            DateTime lastUpdate = DateTime.MinValue;
+            if(metadata.reported != null && metadata.reported.loadAverage != null)
+            {
+                lastUpdate = DateTimeOffset.FromUnixTimeSeconds(metadata.reported.loadAverage.timestamp).UtcDateTime;
+            }
+            
             StringBuilder str = new StringBuilder();
             str.AppendLine();
             str.AppendLine("*Device State (adjustable): " + boxId + "*");
@@ -253,7 +273,8 @@ namespace Graybox
             str.AppendLine("• isNgrokRunning: " + reported.isNgrokRunning);  
             str.AppendLine("• ngrokSshAddress: \"" + reported.ngrokSshAddress + "\"");
             str.AppendLine();
-            
+            str.AppendLine("> _Last Update: " + lastUpdate.ToString("u") +  "_");
+            str.AppendLine();           
             return str.ToString();
         }
 
@@ -329,11 +350,25 @@ namespace Graybox
     internal class GrayboxDeviceState
     {
         public InternalState state {get;set;}
+        public MetadataStateObject metadata {get;set;}
     }
     internal class InternalState
     {
         public DesiredStateObject desired {get;set;}
         public ReportedStateObject reported {get;set;}
+    }
+    internal class MetadataStateObject 
+    {
+        public MetadataReportedObject reported {get;set;}
+
+    }
+    internal class MetadataReportedObject {
+        // NOTE: just need one to grab the time
+        public MetadataTimeObject loadAverage {get;set;}
+    }
+    internal class MetadataTimeObject
+    {
+        public long timestamp {get;set;}
     }
     internal class ReportedStateObject
     {
