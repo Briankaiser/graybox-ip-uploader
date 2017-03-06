@@ -1,15 +1,14 @@
 const bunyan = require('bunyan')
 const path = require('path')
 const os = require('os')
-const dns = require('dns')
+// const dns = require('dns')
 const deferred = require('deferred')
 const async = require('async')
 const ping = require('ping')
 const _ = require('lodash')
-const childProcess = require('child_process')
+const http = require('http')
 
-const promisify = deferred.promisify
-const lookupAsync = promisify(dns.lookup)
+const IP_LOOKUP_URL = 'http://whatismyip.akamai.com/'
 
 ;(function () {
   let localConfig = {}
@@ -72,12 +71,12 @@ const lookupAsync = promisify(dns.lookup)
     // look up external IP
     const tasks = {
       externalIpTask: async.timeout(function (callback) {
-        childProcess.execFile('dig', ['+short', 'myip.opendns.com', '@resolver1.opendns.com'], function (err, stdout, stderr) {
-          if (err) {
-            callback(err)
-          } else {
-            callback(null, stdout.trim())
-          }
+        http.get(IP_LOOKUP_URL, function (res) {
+          res.on('data', function (chunk) {
+            callback(null, chunk.trim())
+          })
+        }).on('error', function (e) {
+          callback(e)
         })
       }, 2000),
       cameraPingTask: async.timeout(function (callback) {
