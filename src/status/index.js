@@ -72,6 +72,7 @@ const IP_LOOKUP_URL = 'http://whatismyip.akamai.com/'
     const tasks = {
       externalIpTask: async.timeout(function (callback) {
         http.get(IP_LOOKUP_URL, function (res) {
+          res.setEncoding('utf8')
           res.on('data', function (chunk) {
             callback(null, chunk.trim())
           })
