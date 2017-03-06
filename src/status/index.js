@@ -86,6 +86,7 @@ const IP_LOOKUP_URL = 'http://whatismyip.akamai.com/'
           callback(null, null)
         }
         ping.promise.probe(deviceState.cameraIp).then(function (cameraPingResult) {
+          console.log('ping result', cameraPingResult && cameraPingResult.alive)
           callback(null, cameraPingResult && cameraPingResult.alive)
         })
       }, 2000),
