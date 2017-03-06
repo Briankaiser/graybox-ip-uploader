@@ -202,7 +202,9 @@ const IP_FORWARDING_PATH = '/proc/sys/net/ipv4/ip_forward'
 
   function turnFirewallOn () {
     logger.info('turning firewall on')
-    childProcess.exec('ufw --force enable', function (err, stdout, stderr) {
+    childProcess.execFile('ufw', ['--force', 'enable'], {
+      timeout: 5000
+    }, function (err, stdout, stderr) {
       if (err) {
         logger.error(err, 'error turning on firewall')
         console.log(stdout, stderr)
@@ -213,7 +215,9 @@ const IP_FORWARDING_PATH = '/proc/sys/net/ipv4/ip_forward'
   }
   function turnFirewallOff () {
     logger.info('turning firewall off')
-    childProcess.exec('ufw disable', function (err, stdout, stderr) {
+    childProcess.execFile('ufw', ['disable'], {
+      timeout: 5000
+    }, function (err, stdout, stderr) {
       if (err) {
         logger.error(err, 'error turning off firewall')
         console.log(stdout, stderr)
