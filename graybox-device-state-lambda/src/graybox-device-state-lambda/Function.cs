@@ -228,7 +228,7 @@ namespace Graybox
             str.AppendLine("• rtmpStreamPath: \"" + desired.rtmpStreamPath + "\"");
             str.AppendLine("• localCameraProxy: " + desired.localCameraProxy);
             str.AppendLine("• audioFromCameraEnabled: " + desired.audioFromCameraEnabled);    
-            str.AppendLine("• forceTcpRtmp: " + desired.forceRtmpTcp);          
+            str.AppendLine("• forceRtspTcp: " + desired.forceRtspTcp);          
             str.AppendLine("• snapshotEnabled: " + desired.snapshotEnabled);
             str.AppendLine("• snapshotPort: \"" + desired.snapshotPort + "\"");
             str.AppendLine("• snapshotPath: \"" + desired.snapshotPath + "\"");
@@ -359,7 +359,7 @@ namespace Graybox
         public string rtmpStreamPath {get;set;}
         public bool localCameraProxy {get;set;}
         public bool audioFromCameraEnabled {get;set;}
-        public bool forceRtmpTcp {get;set;}
+        public bool forceRtspTcp {get;set;}
         public bool snapshotEnabled {get;set;}
         public string snapshotPort {get;set;}
         public string snapshotPath {get;set;}
