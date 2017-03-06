@@ -51,6 +51,7 @@ const fs = require('fs')
     }
     inputOptions.push('-buffer_size 2M')
     inputOptions.push('-reorder_queue_size 64')
+    inputOptions.push('-stimeout 5000000') // (socket timeout) in microseconds
 
     let outputOptions = [
       '-segment_time 8',

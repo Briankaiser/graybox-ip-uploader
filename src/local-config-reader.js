@@ -16,6 +16,7 @@ const defaultConfig = {
   'ffmpegOverridePath': '',
   'tmpDirectory': path.join(os.homedir(), '/graybox'),
   'loggingPath': path.join(os.homedir(), '/graybox/logs'),
+  'verboseFfmpeg': false
 }
 
 module.exports =
@@ -27,6 +28,7 @@ module.exports =
     readFileAsync(configLocation, 'utf8')
       .then(function (result) {
         const tmpConfig = _.merge(defaultConfig, _.omitBy(yaml.safeLoad(result), _.isEmpty))
+        console.log('verbose ffmpeg', tmpConfig.verboseFfmpeg)
         return mkdirpAsync(tmpConfig.tmpDirectory).then(() => mkdirpAsync(tmpConfig.loggingPath)).then(() => tmpConfig)
       }).done(function (config) {
         d.resolve(config)
