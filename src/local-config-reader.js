@@ -16,7 +16,6 @@ const defaultConfig = {
   'ffmpegOverridePath': '',
   'tmpDirectory': path.join(os.homedir(), '/graybox'),
   'loggingPath': path.join(os.homedir(), '/graybox/logs'),
-  'verboseFfmpeg': false
 }
 
 module.exports =
