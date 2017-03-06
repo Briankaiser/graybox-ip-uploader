@@ -132,11 +132,13 @@ namespace Graybox
             switch(command)
             {
                 case "get-device-state":
+                case "get":
                 {
                     result = await GetDeviceState(serviceEndpoint, boxId);
                     break;
                 }
                 case "set-device-state":
+                case "set":
                 {
                     result = await SetDeviceState(serviceEndpoint, boxId, commandText, context);
                     break;
@@ -221,28 +223,34 @@ namespace Graybox
             str.AppendLine("*Device State (adjustable): " + boxId + "*");
             str.AppendLine("---------------------------");
             str.AppendLine("• cameraIp: \"" + desired.cameraIp + "\"");
-            str.AppendLine("• cameraPort: \"" + desired.cameraPort+ "\"");
+            str.AppendLine("• cameraPort: \"" + desired.cameraPort + "\"");
             str.AppendLine("• encoderEnabled: " + desired.encoderEnabled);
-            str.AppendLine("• rtmpStreamPath: \"" + desired.rtmpStreamPath+ "\"");
+            str.AppendLine("• rtmpStreamPath: \"" + desired.rtmpStreamPath + "\"");
             str.AppendLine("• localCameraProxy: " + desired.localCameraProxy);
+            str.AppendLine("• audioFromCameraEnabled: " + desired.audioFromCameraEnabled);    
+            str.AppendLine("• forceTcpRtmp: " + desired.forceRtmpTcp);          
             str.AppendLine("• snapshotEnabled: " + desired.snapshotEnabled);
-            str.AppendLine("• snapshotPort: \"" + desired.snapshotPort+ "\"");
-            str.AppendLine("• snapshotPath: \"" + desired.snapshotPath+ "\"");
+            str.AppendLine("• snapshotPort: \"" + desired.snapshotPort + "\"");
+            str.AppendLine("• snapshotPath: \"" + desired.snapshotPath + "\"");
+            str.AppendLine("• ngrokEnabled: " + desired.ngrokEnabled);
+            str.AppendLine("• ngrokAuthtoken: \"" + desired.ngrokAuthtoken + "\"");
             str.AppendLine();
             str.AppendLine("*Device Status (reported): " + boxId + "*");
             str.AppendLine("---------------------------");
-            str.AppendLine("• deviceId: \"" + reported.deviceId+ "\"");
+            str.AppendLine("• deviceId: \"" + reported.deviceId + "\"");
             str.AppendLine("• ffmpegRunning: " + reported.ffmpegRunning);
             str.AppendLine("• isUploaderRunning: " + reported.isUploaderRunning);
             str.AppendLine("• iotConnected: " + reported.iotConnected);    
             str.AppendLine("• cameraPing: " + reported.cameraPing);        
             str.AppendLine("• filesPendingUpload: " + reported.filesPendingUpload);
-            str.AppendLine("• oldestFileName: \"" + reported.oldestFileName+ "\"");
-            str.AppendLine("• newestFileName: \"" + reported.newestFileName+ "\"");
-            str.AppendLine("• internalIps: \"" + reported.internalIps+ "\"");
+            str.AppendLine("• oldestFileName: \"" + reported.oldestFileName + "\"");
+            str.AppendLine("• newestFileName: \"" + reported.newestFileName + "\"");
+            str.AppendLine("• internalIps: \"" + reported.internalIps + "\"");
             str.AppendLine("• freeMemory: " + reported.freeMemory);
-            str.AppendLine("• loadAverage: \"" + reported.loadAverage+ "\"");
-            str.AppendLine("• lastSnapshotUrl: \"" + reported.lastSnapshotUrl+ "\"");
+            str.AppendLine("• loadAverage: \"" + reported.loadAverage + "\"");
+            str.AppendLine("• lastSnapshotUrl: \"" + reported.lastSnapshotUrl + "\"");
+            str.AppendLine("• isNgrokRunning: " + reported.isNgrokRunning);  
+            str.AppendLine("• ngrokSshAddress: \"" + reported.ngrokSshAddress + "\"");
             str.AppendLine();
             
             return str.ToString();
@@ -278,8 +286,8 @@ namespace Graybox
             str.AppendLine("An example command is: `/graybox graybox-001A get-device-state`");
             str.AppendLine();
             str.AppendLine("Available commands are: ");
-            str.AppendLine("  • get-device-state");
-            str.AppendLine("  • set-device-state");
+            str.AppendLine("  • get-device-state (or get)");
+            str.AppendLine("  • set-device-state (or set)");
             str.AppendLine("  • list-devices _(coming soon)_");
             str.AppendLine();
             str.AppendLine("get-device-state: ");
@@ -340,6 +348,8 @@ namespace Graybox
         public string loadAverage {get;set;}
         public bool cameraPing {get;set;}
         public string lastSnapshotUrl {get;set;}
+        public bool isNgrokRunning {get;set;}
+        public string ngrokSshAddress {get;set;}
     }
     internal class DesiredStateObject 
     {
@@ -348,9 +358,13 @@ namespace Graybox
         public string cameraPort {get;set;}
         public string rtmpStreamPath {get;set;}
         public bool localCameraProxy {get;set;}
+        public bool audioFromCameraEnabled {get;set;}
+        public bool forceRtmpTcp {get;set;}
         public bool snapshotEnabled {get;set;}
         public string snapshotPort {get;set;}
         public string snapshotPath {get;set;}
+        public bool ngrokEnabled {get;set;}
+        public string ngrokAuthtoken {get;set;}
 
     }
 

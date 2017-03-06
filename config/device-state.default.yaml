@@ -7,4 +7,10 @@ rtmpStreamPath:
 snapshotPath:
 accessKey:
 secretKey:
+awsRegion:
+uploadBucket:
 localCameraProxy:
+ngrokEnabled:
+ngrokAuthtoken:
+forceRtmpTcp:
+audioFromCameraEnabled:

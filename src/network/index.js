@@ -3,6 +3,7 @@ const path = require('path')
 const fs = require('fs')
 const deferred = require('deferred')
 const childProcess = require('child_process')
+const ngrok = require('ngrok')
 
 const IPTABLES_TABLE = 'nat'
 const IPTABLES_CHAIN = 'PREROUTING'
@@ -14,6 +15,7 @@ const IP_FORWARDING_PATH = '/proc/sys/net/ipv4/ip_forward'
   let deviceState = {}
   let logger
   let statusInterval
+  let ngrokRunning, ngrokStarting, ngrokSshAddress
 
   process.on('uncaughtException', (err) => {
     console.error('unhandled status exception', err)
@@ -24,6 +26,17 @@ const IP_FORWARDING_PATH = '/proc/sys/net/ipv4/ip_forward'
       clearInterval(statusInterval)
     }
   })
+
+  function triggerNetworkStatusUpdate () {
+    const msg = {
+      type: 'StatusUpdate',
+      payload: {
+        ngrokRunning: ngrokRunning,
+        ngrokSshAddress: ngrokSshAddress
+      }
+    }
+    process.send(msg)
+  }
 
   function setIpForwarding (isEnabled) {
     let d = deferred()
@@ -119,6 +132,72 @@ const IP_FORWARDING_PATH = '/proc/sys/net/ipv4/ip_forward'
     })
   }
 
+  function turnNgrokOn () {
+    let ngrokRegion
+    switch (deviceState.awsRegion) {
+      case 'eu-west-1':
+      case 'eu-west-2':
+      case 'eu-central-1': {
+        ngrokRegion = 'eu'
+        break
+      }
+      case 'ap-southeast-2': {
+        ngrokRegion = 'au'
+        break
+      }
+      case 'ap-south-1':
+      case 'ap-northeast-2':
+      case 'ap-southeast-1':
+      case 'ap-northeast-1': {
+        ngrokRegion = 'ap'
+        break
+      }
+      default: {
+        ngrokRegion = 'us'
+        break
+      }
+    }
+    ngrokStarting = true
+    logger.debug({
+      region: ngrokRegion
+    }, 'starting ngrok')
+
+    ngrok.connect({
+      proto: 'tcp',
+      addr: 22,
+      authtoken: deviceState.ngrokAuthtoken,
+      region: ngrokRegion,
+      bind_tls: false,
+      inspect: false
+    }, function (err, url) {
+      ngrokStarting = false
+      if (err) {
+        ngrokRunning = false
+        logger.error({
+          region: ngrokRegion,
+          err: err
+        }, 'failed ngrok')
+        console.log(err)
+      } else {
+        logger.info({
+          region: ngrokRegion,
+          address: url
+        }, 'started ngrok')
+        ngrokRunning = true
+        ngrokSshAddress = url
+      }
+
+      triggerNetworkStatusUpdate()
+    })
+  }
+  function turnNgrokOff () {
+    ngrok.disconnect()
+    ngrokRunning = false
+    ngrokStarting = false
+
+    triggerNetworkStatusUpdate()
+  }
+
   function init (config) {
     localConfig = config
     logger = bunyan.createLogger({
@@ -147,6 +226,13 @@ const IP_FORWARDING_PATH = '/proc/sys/net/ipv4/ip_forward'
     } else if (!deviceState.localCameraProxy && (deviceState.localCameraProxy !== prevState.localCameraProxy)) {
       // if the proxy is to be turned off (and it was on) - then turn it off
       turnProxyOff()
+    }
+
+    debugger
+    if (deviceState.ngrokEnabled && deviceState.ngrokAuthtoken && !ngrokRunning && !ngrokStarting) {
+      turnNgrokOn()
+    } else if (!deviceState.ngrokEnabled && ngrokRunning) {
+      turnNgrokOff()
     }
   }
 
