@@ -106,12 +106,15 @@ const IP_LOOKUP_URL = 'http://whatismyip.akamai.com/'
 
     async.parallel(async.reflectAll(tasks),
       function (err, results) { // eslint-disable-line handle-callback-err
+        const loadAvg = _.join(_.each(os.loadavg(), function (la) {
+          return la.toFixed(3)
+        }), ', ')
         const statusObj = {
           deviceId: localConfig.deviceId,
           internalIps: results.internalIpsTask.value,
           externalIp: results.externalIpTask.value,
-          freeMemory: os.freemem() / (1024 * 1024),
-          loadAverage: _.join(os.loadavg(), ', '),
+          freeMemory: (os.freemem() / (1024 * 1024)).toFixed(2),
+          loadAverage: loadAvg,
           cameraPing: results.cameraPingTask.value || false
         }
         d.resolve(_.merge(currentStatus, statusObj))
