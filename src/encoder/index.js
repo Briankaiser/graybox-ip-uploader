@@ -68,10 +68,11 @@ const fs = require('fs')
                           .inputOptions(inputOptions)
                           .format('segment')
                           .outputOptions(outputOptions)
-                          .on('start', function () {
+                          .on('start', function (commandLine) {
                             logger.info({
                               input: inputFile,
-                              output: outputFile
+                              output: outputFile,
+                              commandLine: commandLine
                             }, 'ffmpeg started.')
                           })
                           .on('error', function (err, stdout, stderr) {
@@ -107,6 +108,9 @@ const fs = require('fs')
                                 startEncoder()
                               }, 10000)
                             }
+                          })
+                          .on('stderr', function (stderrLine) {
+                            console.error(stderrLine)
                           })
                           .save(outputFile)
   }

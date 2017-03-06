@@ -194,7 +194,7 @@ const IP_FORWARDING_PATH = '/proc/sys/net/ipv4/ip_forward'
     ngrok.disconnect()
     ngrokRunning = false
     ngrokStarting = false
-
+    logger.info('stopped ngrok')
     triggerNetworkStatusUpdate()
   }
 
@@ -228,7 +228,6 @@ const IP_FORWARDING_PATH = '/proc/sys/net/ipv4/ip_forward'
       turnProxyOff()
     }
 
-    debugger
     if (deviceState.ngrokEnabled && deviceState.ngrokAuthtoken && !ngrokRunning && !ngrokStarting) {
       turnNgrokOn()
     } else if (!deviceState.ngrokEnabled && ngrokRunning) {
