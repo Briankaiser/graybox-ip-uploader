@@ -196,6 +196,7 @@ const IP_FORWARDING_PATH = '/proc/sys/net/ipv4/ip_forward'
     ngrok.disconnect()
     ngrokRunning = false
     ngrokStarting = false
+    ngrokSshAddress = ''
     logger.info('stopped ngrok')
     triggerNetworkStatusUpdate()
   }
