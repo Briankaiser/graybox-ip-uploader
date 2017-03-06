@@ -89,10 +89,11 @@ const fs = require('fs')
                             }, 'ffmpeg error')
                             // attempt to restart ffmpeg if applicable
                             if (deviceState.encoderEnabled) {
+                              ffmpegProcess.kill()
                               ffmpegProcess = null
                               setTimeout(function () {
                                 startEncoder()
-                              }, 5000)
+                              }, 20000)
                             }
                           })
                           .on('end', function () {
@@ -103,10 +104,11 @@ const fs = require('fs')
 
                             // attempt to restart ffmpeg if applicable
                             if (deviceState.encoderEnabled) {
+                              ffmpegProcess.kill()
                               ffmpegProcess = null
                               setTimeout(function () {
                                 startEncoder()
-                              }, 10000)
+                              }, 20000)
                             }
                           })
                           .on('stderr', function (stderrLine) {

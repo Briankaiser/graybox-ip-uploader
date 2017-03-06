@@ -114,7 +114,6 @@ const IP_LOOKUP_URL = 'http://whatismyip.akamai.com/'
           loadAverage: _.join(os.loadavg(), ', '),
           cameraPing: results.cameraPingTask.value || false
         }
-        console.log('camera ping', statusObj.cameraPing)
         d.resolve(_.merge(currentStatus, statusObj))
       })
 
@@ -124,7 +123,6 @@ const IP_LOOKUP_URL = 'http://whatismyip.akamai.com/'
   setInterval(function () {
     // update internal status
     statusInterval = GatherInternalStatuses().done(function (fullStatus) {
-      console.log('camera ping final', fullStatus.cameraPing)
       process.send({
         type: 'CompiledStatus',
         payload: fullStatus
