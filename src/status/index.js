@@ -76,7 +76,7 @@ const lookupAsync = promisify(dns.lookup)
           if (err) {
             callback(err)
           } else {
-            callback(stdout.trim())
+            callback(null, stdout.trim())
           }
         })
       }, 2000),
