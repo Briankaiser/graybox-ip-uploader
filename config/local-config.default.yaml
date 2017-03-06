@@ -3,4 +3,5 @@ iotHostname:
 ffmpegOverridePath:
 inputSourceOverride:
 tmpDirectory: 
-loggingPath: 
+loggingPath:
+verboseFfmpeg: 

@@ -110,7 +110,9 @@ const fs = require('fs')
                             }
                           })
                           .on('stderr', function (stderrLine) {
-                            console.error(stderrLine)
+                            if (localConfig.verboseFfmpeg) {
+                              console.error(stderrLine)
+                            }
                           })
                           .save(outputFile)
   }
