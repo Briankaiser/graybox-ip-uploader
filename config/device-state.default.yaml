@@ -12,5 +12,5 @@ uploadBucket:
 localCameraProxy:
 ngrokEnabled:
 ngrokAuthtoken:
-forceRtmpTcp:
+forceRtspTcp:
 audioFromCameraEnabled:
