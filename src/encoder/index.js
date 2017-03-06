@@ -45,18 +45,18 @@ const fs = require('fs')
     const outputFile = path.join(localConfig.tmpDirectory, '/video/', 'output%Y-%m-%d_%H-%M-%S.ts')
     const inputFile = getInput(localConfig, deviceState)
     ignoreNextError = false
-    let inputOptions = [
-      '-buffer_size 64M',
-      '-reorder_queue_size 64'
-    ]
+    let inputOptions = []
     if (deviceState.forceRtspTcp) {
-      inputOptions.push(' -rtsp_transport tcp')
+      inputOptions.push('-rtsp_transport tcp')
     }
+    inputOptions.push('-buffer_size 2M')
+    inputOptions.push('-reorder_queue_size 64')
+
     let outputOptions = [
       '-segment_time 8',
       '-reset_timestamps 1',
       '-strftime 1',
-      '-segment_start_number 1',
+      // '-segment_start_number 1',
       '-segment_time_delta 0.3',
       // '-segment_format mp4',
       '-c copy'
