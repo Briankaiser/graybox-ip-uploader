@@ -106,7 +106,7 @@ const IP_LOOKUP_URL = 'http://whatismyip.akamai.com/'
 
     async.parallel(async.reflectAll(tasks),
       function (err, results) { // eslint-disable-line handle-callback-err
-        const loadAvg = _.join(_.each(os.loadavg(), function (la) {
+        const loadAvg = _.join(_.map(os.loadavg(), function (la) {
           return la.toFixed(3)
         }), ', ')
         const statusObj = {
