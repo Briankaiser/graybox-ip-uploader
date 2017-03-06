@@ -267,6 +267,7 @@ namespace Graybox
             str.AppendLine("• oldestFileName: \"" + reported.oldestFileName + "\"");
             str.AppendLine("• newestFileName: \"" + reported.newestFileName + "\"");
             str.AppendLine("• internalIps: \"" + reported.internalIps + "\"");
+            str.AppendLine("• externalIp: \"" + reported.externalIp + "\"");
             str.AppendLine("• freeMemory: " + reported.freeMemory);
             str.AppendLine("• loadAverage: \"" + reported.loadAverage + "\"");
             str.AppendLine("• lastSnapshotUrl: \"" + reported.lastSnapshotUrl + "\"");
@@ -380,6 +381,7 @@ namespace Graybox
         public bool iotConnected {get;set;}
         public string deviceId {get;set;}
         public string internalIps {get;set;}
+        public string externalIp {get;set;}
         public string freeMemory {get;set;}
         public string loadAverage {get;set;}
         public bool cameraPing {get;set;}
