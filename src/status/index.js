@@ -83,10 +83,10 @@ const IP_LOOKUP_URL = 'http://whatismyip.akamai.com/'
       cameraPingTask: async.timeout(function (callback) {
         // camera ping
         if (!deviceState || !deviceState.cameraIp) {
-          callback(null, null)
+          callback(null, false)
         }
         ping.promise.probe(deviceState.cameraIp).then(function (cameraPingResult) {
-          callback(null, cameraPingResult && cameraPingResult.alive)
+          callback(null, (cameraPingResult !== null && cameraPingResult.alive === true) ? true : false)
         })
       }, 2000),
       internalIpsTask: function (callback) {
@@ -112,7 +112,7 @@ const IP_LOOKUP_URL = 'http://whatismyip.akamai.com/'
           externalIp: results.externalIpTask.value,
           freeMemory: os.freemem() / (1024 * 1024),
           loadAverage: _.join(os.loadavg(), ', '),
-          cameraPing: results.cameraPingTask.value
+          cameraPing: results.cameraPingTask.value || false
         }
         console.log('camera ping', statusObj.cameraPing)
         d.resolve(_.merge(currentStatus, statusObj))
