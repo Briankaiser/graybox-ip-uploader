@@ -33,7 +33,7 @@ const IP_FORWARDING_PATH = '/proc/sys/net/ipv4/ip_forward'
     const msg = {
       type: 'StatusUpdate',
       payload: {
-        ngrokRunning: ngrokRunning,
+        isNgrokRunning: ngrokRunning,
         ngrokSshAddress: ngrokSshAddress
       }
     }

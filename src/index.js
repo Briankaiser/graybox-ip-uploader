@@ -103,7 +103,10 @@ const localConfigReader = require('./local-config-reader')
     }
   }
   function onNetworkMessage (msg) {
-
+    if (msg.type === 'StatusUpdate') {
+      ProcessStatusUpdate(msg)
+      return
+    }
   }
 
   function sendInitToProcess (cp, config) {
