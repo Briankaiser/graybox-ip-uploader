@@ -234,6 +234,7 @@ namespace Graybox
             str.AppendLine("• snapshotPath: \"" + desired.snapshotPath + "\"");
             str.AppendLine("• ngrokEnabled: " + desired.ngrokEnabled);
             str.AppendLine("• ngrokAuthtoken: \"" + desired.ngrokAuthtoken + "\"");
+            str.AppendLine("• firewallEnabled: " + desired.firewallEnabled);
             str.AppendLine();
             str.AppendLine("*Device Status (reported): " + boxId + "*");
             str.AppendLine("---------------------------");
@@ -365,6 +366,7 @@ namespace Graybox
         public string snapshotPath {get;set;}
         public bool ngrokEnabled {get;set;}
         public string ngrokAuthtoken {get;set;}
+        public string firewallEnabled {get;set;}
 
     }
 

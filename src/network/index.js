@@ -16,6 +16,7 @@ const IP_FORWARDING_PATH = '/proc/sys/net/ipv4/ip_forward'
   let logger
   let statusInterval
   let ngrokRunning, ngrokStarting, ngrokSshAddress
+  let firewallRunning
 
   process.on('uncaughtException', (err) => {
     console.error('unhandled status exception', err)
@@ -28,6 +29,7 @@ const IP_FORWARDING_PATH = '/proc/sys/net/ipv4/ip_forward'
   })
 
   function triggerNetworkStatusUpdate () {
+    // TODO: do we need to report ufw status back?
     const msg = {
       type: 'StatusUpdate',
       payload: {
@@ -198,6 +200,29 @@ const IP_FORWARDING_PATH = '/proc/sys/net/ipv4/ip_forward'
     triggerNetworkStatusUpdate()
   }
 
+  function turnFirewallOn () {
+    logger.info('turning firewall on')
+    childProcess.exec('ufw --force enable', function (err, stdout, stderr) {
+      if (err) {
+        logger.error(err, 'error turning on firewall')
+        console.log(stdout, stderr)
+        return
+      }
+      firewallRunning = true
+    })
+  }
+  function turnFirewallOff () {
+    logger.info('turning firewall off')
+    childProcess.exec('ufw disable', function (err, stdout, stderr) {
+      if (err) {
+        logger.error(err, 'error turning off firewall')
+        console.log(stdout, stderr)
+        return
+      }
+      firewallRunning = false
+    })
+  }
+
   function init (config) {
     localConfig = config
     logger = bunyan.createLogger({
@@ -232,6 +257,12 @@ const IP_FORWARDING_PATH = '/proc/sys/net/ipv4/ip_forward'
       turnNgrokOn()
     } else if (!deviceState.ngrokEnabled && ngrokRunning) {
       turnNgrokOff()
+    }
+
+    if (deviceState.firewallEnabled && !firewallRunning) {
+      turnFirewallOn()
+    } else if (!deviceState.firewallEnabled && firewallRunning !== false) {
+      turnFirewallOff()
     }
   }
 
