@@ -12,8 +12,8 @@ const mkdirpAsync = promisify(mkdirp)
 
 const argv = require('yargs').default('config', '../config/local-config.yaml').argv
 const defaultConfig = {
-  'deviceId': '',
-  'ffmpegOverridePath': '',
+  'deviceId': null,
+  'ffmpegOverridePath': null,
   'tmpDirectory': path.join(os.homedir(), '/graybox'),
   'loggingPath': path.join(os.homedir(), '/graybox/logs'),
   'verboseFfmpeg': false
@@ -27,7 +27,7 @@ module.exports =
 
     readFileAsync(configLocation, 'utf8')
       .then(function (result) {
-        const tmpConfig = _.merge(defaultConfig, _.omitBy(yaml.safeLoad(result), _.isEmpty))
+        const tmpConfig = _.merge(defaultConfig, _.omitBy(yaml.safeLoad(result), _.isNil))
         console.log('verbose ffmpeg', tmpConfig.verboseFfmpeg)
         return mkdirpAsync(tmpConfig.tmpDirectory).then(() => mkdirpAsync(tmpConfig.loggingPath)).then(() => tmpConfig)
       }).done(function (config) {
