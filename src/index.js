@@ -36,7 +36,6 @@ const localConfigReader = require('./local-config-reader')
     })
   }
   function RequestDeviceStateChange (payload) {
-    logger.info(payload, 'bluetooth requested a device state change!')
     // take the status message and push to IoT
     const iotProcess = FindChildProcess(childProcesses, 'iot')
     if (!iotProcess) return
@@ -51,6 +50,8 @@ const localConfigReader = require('./local-config-reader')
     if (msg.type === 'StatusUpdate') {
       ProcessStatusUpdate(msg)
       return
+    } else if (msg.type === 'RequestDeviceStateChange') {
+      RequestDeviceStateChange(msg.payload)
     }
   }
   function onUploaderMessage (msg) {

@@ -137,15 +137,22 @@ namespace Graybox
                     result = await GetDeviceState(serviceEndpoint, boxId);
                     break;
                 }
-                case "get-debug":
-                {
-                    result = await GetDeviceState(serviceEndpoint, boxId, true);
-                    break;
-                }
                 case "set-device-state":
                 case "set":
                 {
                     result = await SetDeviceState(serviceEndpoint, boxId, commandText, context);
+                    break;
+                }
+                case "add-scheduled-recording":
+                case "asr":
+                {
+                    result = await AddScheduledRecording(serviceEndpoint, boxId, commandText, context);
+                    break;
+                }
+                case "remove-scheduled-recording":
+                case "rsr":
+                {
+                    result = await RemoveScheduledRecording(serviceEndpoint, boxId, commandText, context);
                     break;
                 }
             }
@@ -157,6 +164,139 @@ namespace Graybox
             var client = new Amazon.IoT.AmazonIoTClient();
             var t = await client.DescribeEndpointAsync();
             return t.EndpointAddress;
+        }
+        
+        private async Task<string> RemoveScheduledRecording(string serviceEndpoint, string boxId, string commandText, ILambdaContext context)
+        {
+            //validate input {boxId} {command} {recording-number}
+            var splitCommand = commandText.Split(' ');
+            if(splitCommand.Length != 3)
+            {
+                return "Bad remove scheduled recording command. Invalid number of arguments found: " + splitCommand.Length;
+            }
+            var removeNumStr = splitCommand[2];
+            int removeNum;
+            if(!int.TryParse(removeNumStr, out removeNum))
+            {
+                 return "Bad add scheduled recording command. Invalid recording number passed in: " + removeNumStr;               
+            }
+            removeNum = removeNum - 1; //convert to array index
+            if(removeNum < 0)
+            {
+
+            }
+
+            var shadow = await GetThingShadow(serviceEndpoint, boxId);
+            var existingScheduled = shadow.state.desired.scheduledRecordings;
+            if(existingScheduled == null)
+            {
+                existingScheduled = new List<ScheduledRecording>();
+            }
+            if(removeNum < 0 || removeNum > existingScheduled.Count-1)
+            {
+                return "Bad add scheduled recording command. Out of range recording number passed in: " + removeNumStr;                
+            }
+
+            existingScheduled.RemoveAt(removeNum);
+
+            //write it back
+
+            //generate string for the array
+            var strbld = new StringBuilder();
+            strbld.Append("[");
+            bool isFirst = true;
+            foreach(var sr in existingScheduled)
+            {
+                if(!isFirst)
+                {
+                    strbld.Append(",");                   
+                }
+                strbld.Append("{");
+                strbld.Append("\"startDate\":");
+                strbld.AppendFormat("\"{0}\"", sr.startDate);
+                strbld.Append(",");
+                strbld.Append("\"endDate\":");
+                strbld.AppendFormat("\"{0}\"", sr.endDate);
+                strbld.Append("}");
+                isFirst = false;
+            }
+            strbld.Append("]");
+
+            await SendUpdateThingCommand(serviceEndpoint, boxId, "scheduledRecordings", strbld.ToString());
+
+            return "Schedule entry successfully removed at recording index: " + removeNumStr;
+        }
+        private async Task<string> AddScheduledRecording(string serviceEndpoint, string boxId, string commandText, ILambdaContext context)
+        {
+            //validate input {boxId} {command} {startDate} {endDate}
+            var splitCommand = commandText.Split(' ');
+            if(splitCommand.Length != 4)
+            {
+                return "Bad add scheduled recording command. Invalid number of arguments found: " + splitCommand.Length;
+            }
+            var startDateStr = splitCommand[2];
+            var endDateStr = splitCommand[3];
+            DateTime startDate, endDate;
+
+            if(!DateTime.TryParse(startDateStr, out startDate))
+            {
+                return "Bad add scheduled recording command. Invalid start date: " + startDateStr;
+            }
+            
+            if(!DateTime.TryParse(endDateStr, out endDate))
+            {
+                return "Bad add scheduled recording command. Invalid end date: " + endDateStr;
+            }
+            startDate = startDate.ToUniversalTime();
+            endDate = endDate.ToUniversalTime();
+
+            if( startDate > endDate) 
+            {
+                  return "Bad add scheduled recording command. Start Date can not come after End Date";              
+            }
+
+            //return "Adding schedule entry with \nstartdate: " + startDate.ToString("u") + "\nenddate: " + endDate.ToString("u");
+
+            // we need to get the current schedule list from the shadow
+            // then add this item to the list and Set
+
+            var shadow = await GetThingShadow(serviceEndpoint, boxId);
+            var existingScheduled = shadow.state.desired.scheduledRecordings;
+            if(existingScheduled == null)
+            {
+                existingScheduled = new List<ScheduledRecording>();
+            }
+            existingScheduled.Add(new ScheduledRecording()
+            {
+                startDate = startDate.ToString("u"),
+                endDate = endDate.ToString("u")
+            });
+            //write it back
+
+            //generate string for the array
+            var strbld = new StringBuilder();
+            strbld.Append("[");
+            bool isFirst = true;
+            foreach(var sr in existingScheduled)
+            {
+                if(!isFirst)
+                {
+                    strbld.Append(",");                   
+                }
+                strbld.Append("{");
+                strbld.Append("\"startDate\":");
+                strbld.AppendFormat("\"{0}\"", sr.startDate);
+                strbld.Append(",");
+                strbld.Append("\"endDate\":");
+                strbld.AppendFormat("\"{0}\"", sr.endDate);
+                strbld.Append("}");
+                isFirst = false;
+            }
+            strbld.Append("]");
+
+            await SendUpdateThingCommand(serviceEndpoint, boxId, "scheduledRecordings", strbld.ToString());
+
+            return "Schedule entry successfully added. \nStart Date: " + startDate.ToString("u") + "\nEnd Date: " + endDate.ToString("u");
         }
         private async Task<string> SetDeviceState(string serviceEndpoint, string boxId, string commandText, ILambdaContext context)
         {
@@ -178,6 +318,13 @@ namespace Graybox
                 return "Invalid set command. Value must be boolean, int, or string. If string - then in quotes. Value: " + value;
             }
 
+            await SendUpdateThingCommand(serviceEndpoint, boxId, parameter, value);
+            return "*Update successful. " + parameter + " : " + value + "*";
+        }
+
+        private async Task SendUpdateThingCommand(string serviceEndpoint, string boxId, string parameter, string value)
+        {
+            // NOTE: at this point inputs are assumed validated
             var str = new StringBuilder();
             str.AppendLine("{");
             str.AppendLine("  \"state\": {");
@@ -206,32 +353,15 @@ namespace Graybox
 
             }
 
-            return "*Update successful. " + parameter + " : " + value + "*";
         }
-        private async Task<string> GetDeviceState(string serviceEndpoint, string boxId, bool debug = false)
+
+        private async Task<string> GetDeviceState(string serviceEndpoint, string boxId)
         {
-            var client = new AmazonIotDataClient("https://" + serviceEndpoint);
-            var result = await client.GetThingShadowAsync(new GetThingShadowRequest()
-            {
-                ThingName = boxId
-            });
-
-            if(debug == true) 
-            {
-                using(StreamReader rdr = new StreamReader(result.Payload))
-                {
-                    return await rdr.ReadToEndAsync();
-                }
-            }
-            JsonSerializer s = new JsonSerializer();
-
-            var state = s.Deserialize<GrayboxDeviceState>(result.Payload);
+            var state = await GetThingShadow(serviceEndpoint, boxId);
             var desired = state.state.desired;
-            if(desired == null) desired = new DesiredStateObject();
             var reported = state.state.reported;
-            if(reported == null) reported = new ReportedStateObject();
             var metadata = state.metadata;
-            if(metadata == null) metadata = new MetadataStateObject();
+
             DateTime lastUpdate = DateTime.MinValue;
             if(metadata.reported != null && metadata.reported.loadAverage != null)
             {
@@ -255,6 +385,14 @@ namespace Graybox
             str.AppendLine("• ngrokEnabled: " + desired.ngrokEnabled);
             str.AppendLine("• ngrokAuthtoken: \"" + desired.ngrokAuthtoken + "\"");
             str.AppendLine("• firewallEnabled: " + desired.firewallEnabled);
+            str.AppendLine("• scheduledRecordings: " + ((desired.scheduledRecordings == null || desired.scheduledRecordings.Count == 0) ? "none":""));
+            if(desired.scheduledRecordings != null)
+            {
+                for(int i=0; i<desired.scheduledRecordings.Count; i++)
+                {
+                    str.AppendLine("    " + (i+1) + ". startDate: " +  desired.scheduledRecordings[i].startDate + ", endDate: " + desired.scheduledRecordings[i].endDate);
+                }
+            }
             str.AppendLine();
             str.AppendLine("*Device Status (reported): " + boxId + "*");
             str.AppendLine("---------------------------");
@@ -277,6 +415,34 @@ namespace Graybox
             str.AppendLine("> _Last Update: " + lastUpdate.ToString("u") +  "_");
             str.AppendLine();           
             return str.ToString();
+        }
+
+        private async Task<GrayboxDeviceState> GetThingShadow(string serviceEndpoint, string boxId)
+        {
+            var client = new AmazonIotDataClient("https://" + serviceEndpoint);
+            var result = await client.GetThingShadowAsync(new GetThingShadowRequest()
+            {
+                ThingName = boxId
+            });
+
+            // if(debug == true) 
+            // {
+            //     using(StreamReader rdr = new StreamReader(result.Payload))
+            //     {
+            //         return await rdr.ReadToEndAsync();
+            //     }
+            // }
+            JsonSerializer s = new JsonSerializer();
+
+            var state = s.Deserialize<GrayboxDeviceState>(result.Payload);
+            var desired = state.state.desired;
+            if(desired == null) desired = new DesiredStateObject();
+            var reported = state.state.reported;
+            if(reported == null) reported = new ReportedStateObject();
+            var metadata = state.metadata;
+            if(metadata == null) metadata = new MetadataStateObject();
+
+            return state;
         }
 
         private async Task SendResultToSlack(string responseUrl, string result)
@@ -311,6 +477,8 @@ namespace Graybox
             str.AppendLine("Available commands are: ");
             str.AppendLine("  • get-device-state (or get)");
             str.AppendLine("  • set-device-state (or set)");
+            str.AppendLine("  • add-scheduled-recording (or asr)");
+            str.AppendLine("  • remove-scheduled-recording (or rsr)");
             str.AppendLine("  • list-devices _(coming soon)_");
             str.AppendLine();
             str.AppendLine("get-device-state: ");
@@ -319,6 +487,13 @@ namespace Graybox
             str.AppendLine("> takes in the parameter to change and the new value");
             str.AppendLine("> ex. `/graybox graybox-001A set-device-state encoderEnabled true`");
             str.AppendLine("> Strings should be surrounded in double quotes. Booleans and Ints should be plain.");
+            str.AppendLine("add-scheduled-recording: ");
+            str.AppendLine("> First parameter is the start date. Second parameter is the end date.");
+            str.AppendLine("> ex. `/graybox graybox-001A add-scheduled-recording 2017-03-07T18:00:00Z 2017-03-07T19:00:00Z`");
+            str.AppendLine("> All dates are assumed to be UTC. This can be changed by replacing `Z` with a TZ offset like `-5`.");
+            str.AppendLine("remove-scheduled-recording: ");
+            str.AppendLine("> Takes one parameter which is the scheduled recording number to remove (1 based index)");
+            str.AppendLine("> ex. `/graybox graybox-001A remove-scheduled-recording 1`");
             str.AppendLine();
             str.AppendLine();
 
@@ -333,6 +508,9 @@ namespace Graybox
         {
             var props = System.Reflection.TypeExtensions.GetProperties(typeof(DesiredStateObject));
             var propNames = props.Select(p=>p.Name).ToList();
+            //don't allow this variable to get set directly - can cause issues
+            if(parameter.Equals("scheduledRecordings", StringComparison.OrdinalIgnoreCase)) return false;
+
             return propNames.Contains(parameter);
         }
         private static bool IsValidParameterValue(string value)
@@ -404,9 +582,14 @@ namespace Graybox
         public bool ngrokEnabled {get;set;}
         public string ngrokAuthtoken {get;set;}
         public string firewallEnabled {get;set;}
+        public List<ScheduledRecording> scheduledRecordings {get;set;}
 
     }
-
+    internal class ScheduledRecording
+    {
+        public string startDate {get;set;}
+        public string endDate {get;set;}
+    }
     public class FunctionRequest
     {
         public IDictionary<string, string> QueryStringParameters {get;set;}
