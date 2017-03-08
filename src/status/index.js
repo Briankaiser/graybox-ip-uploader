@@ -115,14 +115,11 @@ const IP_LOOKUP_URL = 'http://whatismyip.akamai.com/'
             logger.warn('failed to get disk space', videoPath)
             return
           }
-          console.log('found disk space')
-          console.log(stdout)
-          console.log()
           const lines = stdout.split('\n')
-          console.log('second line: ' + lines[1])
           const data = lines[1].split(' ')
-          console.log(data)
-          callback(null, data[4])
+          const filteredData = _.filter(data, !_.isEmpty)
+          console.log(filteredData)
+          callback(null, filteredData[4])
         })
       }, 2000)
     }
