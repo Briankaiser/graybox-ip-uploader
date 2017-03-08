@@ -117,7 +117,7 @@ const IP_LOOKUP_URL = 'http://whatismyip.akamai.com/'
           }
           const lines = stdout.split('\n')
           const data = lines[1].split(' ')
-          const filteredData = _.filter(data, !_.isEmpty)
+          const filteredData = _.reject(data, _.isEmpty)
           console.log(filteredData)
           callback(null, filteredData[4])
         })
