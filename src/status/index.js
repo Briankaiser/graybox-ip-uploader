@@ -1,7 +1,7 @@
 const bunyan = require('bunyan')
 const path = require('path')
 const os = require('os')
-// const dns = require('dns')
+const childProcess = require('child_process')
 const deferred = require('deferred')
 const async = require('async')
 const ping = require('ping')
@@ -101,7 +101,30 @@ const IP_LOOKUP_URL = 'http://whatismyip.akamai.com/'
           }).join(', ')
           .value()
         callback(null, currentInternalIps)
-      }
+      },
+      freeDiskSpaceTask: async.timeout(function (callback) {
+        if (process.platform === 'win32') {
+          callback(null)
+          return
+        }
+        const videoPath = path.join(localConfig.tmpDirectory, '/video/')
+        childProcess.execFile('df', ['-h', videoPath], {
+          timeout: 2000
+        }, function (err, stdout, stderr) {
+          if (err) {
+            logger.warn('failed to get disk space', videoPath)
+            return
+          }
+          console.log('found disk space')
+          console.log(stdout)
+          console.log()
+          const lines = stdout.split('\n')
+          console.log('second line: ' + lines[1])
+          const data = lines[1].split(' ')
+          console.log(data)
+          callback(null, data[4])
+        })
+      }, 2000)
     }
 
     async.parallel(async.reflectAll(tasks),
@@ -115,7 +138,8 @@ const IP_LOOKUP_URL = 'http://whatismyip.akamai.com/'
           externalIp: results.externalIpTask.value,
           freeMemory: (os.freemem() / (1024 * 1024)).toFixed(2),
           loadAverage: loadAvg,
-          cameraPing: results.cameraPingTask.value || false
+          cameraPing: results.cameraPingTask.value || false,
+          diskPercentInUse: results.freeDiskSpaceTask.value
         }
         d.resolve(_.merge(currentStatus, statusObj))
       })
