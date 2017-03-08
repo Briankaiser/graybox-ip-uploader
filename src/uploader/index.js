@@ -19,6 +19,7 @@ const VALID_EXT = ['.mp4', '.ts', '.jpg']
   let uploaderInterval
   let currentlyUploading = false
   let lastCountPendingVideoFiles, oldestFileName, newestFileName
+  let lastUploadDurationSec, lastUploadSpeedMBps
   let lastSnapshotUrl
   let videoPath
 
@@ -65,6 +66,7 @@ const VALID_EXT = ['.mp4', '.ts', '.jpg']
         const uploadFs = fs.createReadStream(toUpload)
         // upload then delete
         // build the promise chain here so we have the file name, report status
+        const uploadStartTime = new Date().getTime()
         return s3Service.upload({
           Bucket: deviceState.uploadBucket,
           Key: fileKey,
@@ -72,10 +74,12 @@ const VALID_EXT = ['.mp4', '.ts', '.jpg']
           Body: uploadFs
         }).promise()
           .then(() => {
+            lastUploadDurationSec = (new Date().getTime() - uploadStartTime) / 1000.0
+            lastUploadSpeedMBps = ((uploadFs.bytesRead / 1024 / 1024) / lastUploadDurationSec).toFixed(2)
             return unlinkAsync(toUpload)
           }) // delete file on successful upload
           .then(() => {
-            logger.info(toUpload, 'successfully uploaded and deleted')
+            logger.debug(toUpload, 'successfully uploaded and deleted with MBps: ', lastUploadDurationSec)
             if (path.extname(toUpload) === '.jpg') {
               lastSnapshotUrl = 'http://' + deviceState.uploadBucket + '.s3.amazonaws.com/' + fileKey
             }
@@ -168,7 +172,9 @@ const VALID_EXT = ['.mp4', '.ts', '.jpg']
         isUploaderRunning: !!uploaderInterval,
         oldestFileName: oldestFileName,
         newestFileName: newestFileName,
-        lastSnapshotUrl: lastSnapshotUrl
+        lastSnapshotUrl: lastSnapshotUrl,
+        lastUploadDurationSec: lastUploadDurationSec,
+        lastUploadSpeedMBps: lastUploadSpeedMBps
       }
     }
   }

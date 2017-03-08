@@ -146,6 +146,7 @@ const SCHEDULE_CHECK_INTERVAL = 10 * 1000
     if (!snapshotInterval) return
     logger.info('Stopping snapshot interval')
     clearInterval(snapshotInterval)
+    snapshotInterval = null
   }
 
   function takeSnapshot () {

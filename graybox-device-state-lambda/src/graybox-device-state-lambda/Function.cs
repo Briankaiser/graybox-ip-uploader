@@ -404,6 +404,8 @@ namespace Graybox
             str.AppendLine("• filesPendingUpload: " + reported.filesPendingUpload);
             str.AppendLine("• oldestFileName: \"" + reported.oldestFileName + "\"");
             str.AppendLine("• newestFileName: \"" + reported.newestFileName + "\"");
+            str.AppendLine("• lastUploadDurationSec: " + reported.lastUploadDurationSec);
+            str.AppendLine("• lastUploadSpeedMBps: " + reported.lastUploadSpeedMBps);
             str.AppendLine("• internalIps: \"" + reported.internalIps + "\"");
             str.AppendLine("• externalIp: \"" + reported.externalIp + "\"");
             str.AppendLine("• freeMemory: " + reported.freeMemory);
@@ -556,6 +558,8 @@ namespace Graybox
         public bool isUploaderRunning {get;set;}
         public string oldestFileName {get;set;}
         public string newestFileName {get;set;}
+        public long lastUploadDurationSec {get;set;}
+        public long lastUploadSpeedMBps {get;set;}
         public bool iotConnected {get;set;}
         public string deviceId {get;set;}
         public string internalIps {get;set;}

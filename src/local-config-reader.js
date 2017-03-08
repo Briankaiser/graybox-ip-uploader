@@ -28,7 +28,6 @@ module.exports =
     readFileAsync(configLocation, 'utf8')
       .then(function (result) {
         const tmpConfig = _.merge(defaultConfig, _.omitBy(yaml.safeLoad(result), _.isNil))
-        console.log('verbose ffmpeg', tmpConfig.verboseFfmpeg)
         return mkdirpAsync(tmpConfig.tmpDirectory).then(() => mkdirpAsync(tmpConfig.loggingPath)).then(() => tmpConfig)
       }).done(function (config) {
         d.resolve(config)
