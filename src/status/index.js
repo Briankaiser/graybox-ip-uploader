@@ -102,7 +102,7 @@ const IP_LOOKUP_URL = 'http://whatismyip.akamai.com/'
           .value()
         callback(null, currentInternalIps)
       },
-      freeDiskSpaceTask: async.timeout(function (callback) {
+      diskPercentInUseTask: async.timeout(function (callback) {
         if (process.platform === 'win32') {
           callback(null)
           return
@@ -117,8 +117,8 @@ const IP_LOOKUP_URL = 'http://whatismyip.akamai.com/'
           }
           const lines = stdout.split('\n')
           const data = lines[1].split(' ')
+          // ex. [ '/dev/root', '30G', '2.5G', '26G', '9%', '/' ]
           const filteredData = _.reject(data, _.isEmpty)
-          console.log(filteredData)
           callback(null, filteredData[4])
         })
       }, 2000)
@@ -136,7 +136,7 @@ const IP_LOOKUP_URL = 'http://whatismyip.akamai.com/'
           freeMemory: (os.freemem() / (1024 * 1024)).toFixed(2),
           loadAverage: loadAvg,
           cameraPing: results.cameraPingTask.value || false,
-          diskPercentInUse: results.freeDiskSpaceTask.value
+          diskPercentInUse: results.diskPercentInUseTask.value
         }
         d.resolve(_.merge(currentStatus, statusObj))
       })

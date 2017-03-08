@@ -410,6 +410,7 @@ namespace Graybox
             str.AppendLine("• externalIp: \"" + reported.externalIp + "\"");
             str.AppendLine("• freeMemory: " + reported.freeMemory);
             str.AppendLine("• loadAverage: \"" + reported.loadAverage + "\"");
+            str.AppendLine("• diskPercentInUse: \"" + reported.diskPercentInUse + "\"");
             str.AppendLine("• lastSnapshotUrl: \"" + reported.lastSnapshotUrl + "\"");
             str.AppendLine("• isNgrokRunning: " + reported.isNgrokRunning);  
             str.AppendLine("• ngrokSshAddress: \"" + reported.ngrokSshAddress + "\"");
@@ -566,6 +567,7 @@ namespace Graybox
         public string externalIp {get;set;}
         public string freeMemory {get;set;}
         public string loadAverage {get;set;}
+        public string diskPercentInUse {get;set;}
         public bool cameraPing {get;set;}
         public string lastSnapshotUrl {get;set;}
         public bool isNgrokRunning {get;set;}
