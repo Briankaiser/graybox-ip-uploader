@@ -6,6 +6,10 @@ const mkdirp = require('mkdirp')
 const _ = require('lodash')
 const http = require('http')
 const fs = require('fs')
+const moment = require('moment')
+
+const SNAPSHOT_INTERVAL = 10 * 1000
+const SCHEDULE_CHECK_INTERVAL = 10 * 1000
 
 ;(function () {
   let localConfig = {}
@@ -14,6 +18,8 @@ const fs = require('fs')
   let logger
   let ignoreNextError = false
   let snapshotInterval
+  let scheduledRecordingActive
+  let scheduledRecordingsInterval
 
   process.on('exit', function () {
     if (ffmpegProcess) {
@@ -23,6 +29,9 @@ const fs = require('fs')
     }
     if (snapshotInterval) {
       clearInterval(snapshotInterval)
+    }
+    if (scheduledRecordingsInterval) {
+      clearInterval(scheduledRecordingsInterval)
     }
   })
 
@@ -130,7 +139,7 @@ const fs = require('fs')
   function startSnapshot () {
     if (snapshotInterval) return
     logger.info('Starting snapshot interval')
-    snapshotInterval = setInterval(takeSnapshot, 10000)
+    snapshotInterval = setInterval(takeSnapshot, SNAPSHOT_INTERVAL)
   }
 
   function stopSnapshot () {
@@ -165,6 +174,59 @@ const fs = require('fs')
       fs.unlink(imagePath)
     })
   }
+  function checkForScheduledRecording () {
+    const scheduled = deviceState.scheduledRecordings
+    let isActive = false
+    if (_.isEmpty(scheduled) || !_.isArrayLikeObject(scheduled)) {
+      isActive = false
+    } else {
+      const now = moment()
+      let entriesToRemove = []
+      _.each(scheduled, function (si) {
+        if (si == null || !si.startDate || !si.endDate) return
+
+        var startMoment = moment(si.startDate)
+        var endMoment = moment(si.endDate)
+
+        if (!startMoment.isValid() || !endMoment.isValid()) return
+
+        // start a little early and end a little late
+        startMoment = startMoment.subtract(10, 'seconds')
+        endMoment = endMoment.add(10, 'seconds')
+
+        if (now.isBetween(startMoment, endMoment)) {
+          isActive = true
+        }
+
+        if (now.diff(endMoment, 'days') >= 1) {
+          entriesToRemove.push(si)
+        }
+      })
+
+      if (entriesToRemove.length > 0) {
+        let newEntries = _.difference(scheduled, entriesToRemove)
+        process.send({
+          type: 'RequestDeviceStateChange',
+          payload: {
+            scheduledRecordings: newEntries
+          }
+        })
+      }
+    }
+
+    scheduledRecordingActive = isActive
+    startOrStopEncoderAsNecessary()
+  }
+  function startScheduledRecordingsInterval () {
+    if (scheduledRecordingsInterval) return
+    scheduledRecordingsInterval = setInterval(checkForScheduledRecording, SCHEDULE_CHECK_INTERVAL)
+  }
+  function stopScheduledRecordingsInterval () {
+    if (scheduledRecordingsInterval) {
+      clearInterval(scheduledRecordingsInterval)
+    }
+    scheduledRecordingActive = false
+  }
 
   function init (config) {
     localConfig = config
@@ -186,20 +248,33 @@ const fs = require('fs')
     mkdirp(path.join(localConfig.tmpDirectory, '/video/'))
   }
 
-  function ProcessUpdatedDeviceState (state) {
-    deviceState = state
+  function startOrStopEncoderAsNecessary () {
     // if it should be running, and it isn't current running - start it
-    if (deviceState.encoderEnabled && !ffmpegProcess) {
+    if ((deviceState.encoderEnabled || scheduledRecordingActive) && !ffmpegProcess) {
+      console.log('Starting Encoder')
       startEncoder()
     // if it should be off - but it is currently running - stop it
-    } else if (!deviceState.encoderEnabled && !!ffmpegProcess) {
+    } else if ((!deviceState.encoderEnabled && !scheduledRecordingActive) && !!ffmpegProcess) {
+      console.log('Stopping Encoder')
       stopEncoder()
     }
+  }
+
+  function ProcessUpdatedDeviceState (state) {
+    deviceState = state
+
+    startOrStopEncoderAsNecessary()
 
     if (deviceState.snapshotEnabled && !snapshotInterval) {
       startSnapshot()
     } else if (!deviceState.snapshotEnabled && snapshotInterval) {
       stopSnapshot()
+    }
+
+    if (!_.isEmpty(deviceState.scheduledRecordings) && !scheduledRecordingsInterval) {
+      startScheduledRecordingsInterval()
+    } else if (_.isEmpty(deviceState.scheduledRecordings) && scheduledRecordingsInterval) {
+      stopScheduledRecordingsInterval()
     }
   }
   function buildEncoderStatusMessage () {
