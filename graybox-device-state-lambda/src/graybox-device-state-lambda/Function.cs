@@ -558,8 +558,8 @@ namespace Graybox
         public bool isUploaderRunning {get;set;}
         public string oldestFileName {get;set;}
         public string newestFileName {get;set;}
-        public long lastUploadDurationSec {get;set;}
-        public long lastUploadSpeedMBps {get;set;}
+        public double lastUploadDurationSec {get;set;}
+        public double lastUploadSpeedMBps {get;set;}
         public bool iotConnected {get;set;}
         public string deviceId {get;set;}
         public string internalIps {get;set;}
