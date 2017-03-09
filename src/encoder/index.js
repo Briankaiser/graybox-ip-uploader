@@ -54,79 +54,105 @@ const SCHEDULE_CHECK_INTERVAL = 10 * 1000
     const outputFile = path.join(localConfig.tmpDirectory, '/video/', 'output%Y-%m-%d_%H-%M-%S.ts')
     const inputFile = getInput(localConfig, deviceState)
     ignoreNextError = false
-    let inputOptions = []
+    let inputOptions = [
+      '-buffer_size 2M',
+      '-reorder_queue_size 64',
+      '-stimeout 5000000', // (socket timeout) in microseconds
+      '-thread_queue_size 1024'
+    ]
     if (deviceState.forceRtspTcp) {
       inputOptions.push('-rtsp_transport tcp')
     }
-    inputOptions.push('-buffer_size 2M')
-    inputOptions.push('-reorder_queue_size 64')
-    inputOptions.push('-stimeout 5000000') // (socket timeout) in microseconds
 
     let outputOptions = [
+      '-map 0:v:0',
       '-segment_time 8',
       '-reset_timestamps 1',
       '-strftime 1',
       // '-segment_start_number 1',
-      '-segment_time_delta 0.3',
+      '-segment_time_delta 0.3'
       // '-segment_format mp4',
-      '-c copy'
+      // '-c copy'
     ]
-    if (!deviceState.audioFromCameraEnabled) {
+    if (!deviceState.audioFromCameraEnabled && !deviceState.useExternalMicAudio) {
       outputOptions.push('-an')
     }
-    ffmpegProcess = ffmpeg(inputFile)
-                          .inputOptions(inputOptions)
-                          .format('segment')
-                          .outputOptions(outputOptions)
-                          .on('start', function (commandLine) {
-                            logger.info({
-                              input: inputFile,
-                              output: outputFile,
-                              commandLine: commandLine
-                            }, 'ffmpeg started.')
-                          })
-                          .on('error', function (err, stdout, stderr) {
-                            // if graceful exit (ie remote encoder stop)
-                            if (ignoreNextError) {
-                              ignoreNextError = false
-                              return
-                            }
+    ffmpegProcess = ffmpeg({
+      // logger: logger
+    })
+    .input(inputFile)
+    .inputOptions(inputOptions)
 
-                            logger.info({
-                              input: inputFile,
-                              output: outputFile,
-                              error: err
-                            }, 'ffmpeg error')
-                            // attempt to restart ffmpeg if applicable
-                            if (deviceState.encoderEnabled) {
-                              ffmpegProcess.kill()
-                              ffmpegProcess = null
-                              setTimeout(function () {
-                                startEncoder()
-                              }, 20000)
-                            }
-                          })
-                          .on('end', function () {
-                            logger.info({
-                              input: inputFile,
-                              output: outputFile
-                            }, 'ffmpeg ended.')
+    // add external usb mic input
+    // can not be combined with in camera audio (audioFromCameraEnabled)
+    // only works on linux at this time
+    if (deviceState.useExternalMicAudio && !deviceState.audioFromCameraEnabled && process.platform === 'linux') {
+      ffmpegProcess = ffmpegProcess
+                        .input('default:CARD=Device')
+                        .inputFormat('alsa')
+                        .inputOptions([
+                          '-ac 1',
+                          '-thread_queue_size 1024'
+                        ])
+                        .audioCodec('aac')
+      //   .audioFilters('volume=0.5')
+      outputOptions.push('-map 1:a:0')
+      // outputOptions.push('-c:a aac')
+    }
 
-                            // attempt to restart ffmpeg if applicable
-                            if (deviceState.encoderEnabled) {
-                              ffmpegProcess.kill()
-                              ffmpegProcess = null
-                              setTimeout(function () {
-                                startEncoder()
-                              }, 20000)
-                            }
-                          })
-                          .on('stderr', function (stderrLine) {
-                            if (localConfig.verboseFfmpeg) {
-                              console.error(stderrLine)
-                            }
-                          })
-                          .save(outputFile)
+    ffmpegProcess = ffmpegProcess
+                      .format('segment')
+                      .videoCodec('copy')
+                      .outputOptions(outputOptions)
+                      .on('start', function (commandLine) {
+                        logger.info({
+                          input: inputFile,
+                          output: outputFile,
+                          commandLine: commandLine
+                        }, 'ffmpeg started.')
+                      })
+                      .on('error', function (err, stdout, stderr) {
+                        // if graceful exit (ie remote encoder stop)
+                        if (ignoreNextError) {
+                          ignoreNextError = false
+                          return
+                        }
+
+                        logger.info({
+                          input: inputFile,
+                          output: outputFile,
+                          error: err
+                        }, 'ffmpeg error')
+                        // attempt to restart ffmpeg if applicable
+                        if (deviceState.encoderEnabled) {
+                          ffmpegProcess.kill()
+                          ffmpegProcess = null
+                          setTimeout(function () {
+                            startEncoder()
+                          }, 20000)
+                        }
+                      })
+                      .on('end', function () {
+                        logger.info({
+                          input: inputFile,
+                          output: outputFile
+                        }, 'ffmpeg ended.')
+
+                        // attempt to restart ffmpeg if applicable
+                        if (deviceState.encoderEnabled) {
+                          ffmpegProcess.kill()
+                          ffmpegProcess = null
+                          setTimeout(function () {
+                            startEncoder()
+                          }, 20000)
+                        }
+                      })
+                      .on('stderr', function (stderrLine) {
+                        if (localConfig.verboseFfmpeg) {
+                          console.error(stderrLine)
+                        }
+                      })
+                      .save(outputFile)
   }
   function stopEncoder () {
     if (ffmpegProcess) {
