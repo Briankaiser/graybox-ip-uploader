@@ -379,7 +379,7 @@ namespace Graybox
             str.AppendLine("• localCameraProxy: " + desired.localCameraProxy);
             str.AppendLine("• audioFromCameraEnabled: " + desired.audioFromCameraEnabled); 
             str.AppendLine("• useExternalMicAudio: " + desired.useExternalMicAudio); 
-              
+            str.AppendLine("• overrideVideoExt: \"" + desired.overrideVideoExt + "\"");
             str.AppendLine("• forceRtspTcp: " + desired.forceRtspTcp);          
             str.AppendLine("• snapshotEnabled: " + desired.snapshotEnabled);
             str.AppendLine("• snapshotPort: \"" + desired.snapshotPort + "\"");
@@ -584,6 +584,7 @@ namespace Graybox
         public bool localCameraProxy {get;set;}
         public bool audioFromCameraEnabled {get;set;}
         public bool useExternalMicAudio {get;set;}
+        public string overrideVideoExt {get;set;}
         public bool forceRtspTcp {get;set;}
         public bool snapshotEnabled {get;set;}
         public string snapshotPort {get;set;}

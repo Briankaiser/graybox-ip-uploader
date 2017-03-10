@@ -51,7 +51,11 @@ const SCHEDULE_CHECK_INTERVAL = 10 * 1000
   function startEncoder () {
     if (ffmpegProcess) return // don't allow double run
     // start ffmpeg
-    const outputFile = path.join(localConfig.tmpDirectory, '/video/', 'output%Y-%m-%d_%H-%M-%S.mp4')
+    let videoExt = '.ts' // default extension
+    if (!_.isEmpty(deviceState.overrideVideoExt)) {
+      videoExt = deviceState.overrideVideoExt
+    }
+    const outputFile = path.join(localConfig.tmpDirectory, '/video/', 'output%Y-%m-%d_%H-%M-%S' + videoExt)
     const inputFile = getInput(localConfig, deviceState)
     ignoreNextError = false
     let inputOptions = [

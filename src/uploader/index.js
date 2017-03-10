@@ -9,7 +9,7 @@ const promisify = deferred.promisify
 const readDirAsync = promisify(fs.readdir)
 const unlinkAsync = promisify(fs.unlink)
 
-const VALID_EXT = ['.mp4', '.ts', '.jpg']
+const VALID_EXT = ['.mp4', '.ts', '.mkv', '.jpg'] 
 
 ;(function () {
   let localConfig = {}

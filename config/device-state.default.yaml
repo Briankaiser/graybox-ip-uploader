@@ -14,5 +14,6 @@ ngrokEnabled:
 ngrokAuthtoken:
 forceRtspTcp:
 audioFromCameraEnabled:
+overrideVideoExt:
 firewallEnabled:
 scheduledRecordings:
