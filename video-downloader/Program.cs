@@ -267,7 +267,7 @@ namespace ConsoleApplication
                 {
                     BucketName = bucket,
                     MaxKeys = 1000,
-                    Prefix = deviceId + "/", // reverseDeviceId + "/",
+                    Prefix = reverseDeviceId + "/",
                     ContinuationToken = continuationToken,
                 };
                 var resp = await regionClient.ListObjectsV2Async(request);
