@@ -242,8 +242,9 @@ namespace ConsoleApplication
                 var bucketLocationResp = await nonRegionClient.GetBucketLocationAsync(bucket);
                 bucketLocation = bucketLocationResp.Location;
             }
-            Console.WriteLine("Found bucket region: " + bucketLocation.Value);
-            return bucketLocation.Value;
+            var bucketRegion = string.IsNullOrWhiteSpace(bucketLocation.Value)? "us-east-1" : bucketLocation.Value;
+            Console.WriteLine("Found bucket region: " + bucketRegion);
+            return bucketRegion;
         }
         private static async Task<List<S3Object>> GetVideoFragmentsInBucket(string profile, string deviceId, string bucketLocation, string bucket)
         {
