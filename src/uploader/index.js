@@ -9,7 +9,7 @@ const promisify = deferred.promisify
 const readDirAsync = promisify(fs.readdir)
 const unlinkAsync = promisify(fs.unlink)
 
-const VALID_EXT = ['.mp4', '.ts', '.mkv', '.jpg'] 
+const VALID_EXT = ['.mp4', '.ts', '.mkv', '.jpg']
 
 ;(function () {
   let localConfig = {}
@@ -60,8 +60,10 @@ const VALID_EXT = ['.mp4', '.ts', '.mkv', '.jpg']
         if (!toUpload) return
 
         logger.debug(toUpload, 'Starting upload')
-        const fileKey = path.join(localConfig.deviceId, path.basename(toUpload))
-
+        // reverse device id for better S3 path diversity
+        const reverseDeviceId = localConfig.deviceId.split('').reverse().join('')
+        const fileKey = path.join(reverseDeviceId, path.basename(toUpload))
+        console.log(fileKey)
         const acl = path.extname(toUpload) === '.jpg' ? 'public-read' : 'private'
         const uploadFs = fs.createReadStream(toUpload)
         // upload then delete
