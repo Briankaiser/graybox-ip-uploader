@@ -222,8 +222,8 @@ const SCHEDULE_CHECK_INTERVAL = 10 * 1000
         if (!startMoment.isValid() || !endMoment.isValid()) return
 
         // start a little early and end a little late
-        startMoment = startMoment.subtract(10, 'seconds')
-        endMoment = endMoment.add(10, 'seconds')
+        startMoment = startMoment.subtract(30, 'seconds')
+        endMoment = endMoment.add(30, 'seconds')
 
         if (now.isBetween(startMoment, endMoment)) {
           isActive = true
