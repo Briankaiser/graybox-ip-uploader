@@ -41,6 +41,7 @@ namespace ConsoleApplication
                 {
                     if(!ValidateRequiredArguments(deviceIdOption, bucketOption))
                     {
+                        c.ShowHelp();
                         return 1;
                     }
                     //get all video fragments in the bucket
@@ -70,6 +71,7 @@ namespace ConsoleApplication
                 {
                     if(!ValidateRequiredArguments(deviceIdOption, bucketOption, startDateOption, endDateOption, downloadPathOption))
                     {
+                        c.ShowHelp();
                         return 1;
                     }
                     DateTime startDate, endDate;
