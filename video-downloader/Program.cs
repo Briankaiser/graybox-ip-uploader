@@ -283,7 +283,7 @@ namespace ConsoleApplication
                 {
                     break;
                 }
-                continuationToken = resp.ContinuationToken;
+                continuationToken = resp.NextContinuationToken;
             }
             Console.WriteLine(string.Format("Found {0} matching video fragments.", deviceFiles.Count));
 
