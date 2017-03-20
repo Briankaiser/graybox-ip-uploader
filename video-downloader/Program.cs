@@ -49,14 +49,9 @@ namespace ConsoleApplication
                     var videoFrags = await GetVideoFragmentsInBucket(profileOption.Value(), deviceIdOption.Value(), bucketLocation, bucketOption.Value());
                     UpdateDateModifiedWithFilmingDate(videoFrags);
                     var videoRanges = GetVideoRangesFromFragments(videoFrags);
-
+                    Console.WriteLine();
                     DisplayVideoRanges(videoRanges);
-
-                    // Get the download ranges from those fragments
-                    // validate that the range is between(inside) available ranges
-                    // compile list of video to download
-                    // download all the fragments
-                    //run concat job to produce final video     
+   
                     return 0;                        
                 });
             });
@@ -98,7 +93,7 @@ namespace ConsoleApplication
                     UpdateDateModifiedWithFilmingDate(videoFrags);
                     var videoRanges = GetVideoRangesFromFragments(videoFrags);
 
-                    //DisplayVideoRanges(videoRanges);
+                    Console.WriteLine();
 
                     var rangeToUse = FindVideoRangeForDates(startDate, endDate, videoRanges);
                     if(rangeToUse == null)
@@ -108,7 +103,7 @@ namespace ConsoleApplication
                     }
                     Console.WriteLine(string.Format("Using video range {0:u} to {1:u}", rangeToUse.StartDate, rangeToUse.EndDate));
                     var fragmentsToDownload = GetFragmentsToDownload(startDate, endDate, rangeToUse);
-                    Console.WriteLine(string.Format("Needing to download {0} fragments", fragmentsToDownload.Count));
+                    //Console.WriteLine(string.Format("Needing to download {0} fragments", fragmentsToDownload.Count));
 
                     var localFiles = await DownloadFragments(profile, bucketLocation, bucket, fragmentsToDownload, downloadPath);
 
@@ -152,6 +147,8 @@ namespace ConsoleApplication
             }
             var returnFileList = new List<string>(fragmentsToDownload.Count);
             TransferUtility tranUtility = new TransferUtility(regionClient);
+            int i = 0;
+            Console.WriteLine(string.Format("Successfully downloaded ({0}/{1}): {2}            ", i, fragmentsToDownload.Count, ""));
             foreach(var frag in fragmentsToDownload)
             {
                 var localFileName = Path.GetFileName(frag.Key);
@@ -161,11 +158,13 @@ namespace ConsoleApplication
                     FilePath = localFullPath,
                     BucketName = frag.BucketName,
                     Key = frag.Key,
+
                 });
-                Console.WriteLine(string.Format("Successfully downloaded {0}", localFileName));
+                Console.SetCursorPosition(0, Console.CursorTop-1);
+                Console.WriteLine(string.Format("Successfully downloaded ({0}/{1}): {2}            ", ++i, fragmentsToDownload.Count, localFileName));
                 returnFileList.Add(localFullPath);
             }
-
+            Console.WriteLine();
             return returnFileList;
         }
         private static List<S3Object> GetFragmentsToDownload(DateTime startDate, DateTime endDate, S3FragmentRange range)
@@ -264,6 +263,7 @@ namespace ConsoleApplication
 
             List<S3Object> deviceFiles = new List<S3Object>();
             string continuationToken = null;
+            Console.WriteLine(string.Format("Found matching video fragments: {0}          ", deviceFiles.Count));
             while(true)
             {
                 var request = new ListObjectsV2Request()
@@ -278,6 +278,8 @@ namespace ConsoleApplication
                 //don't add files that are clearly too small or not video
                 deviceFiles.AddRange(resp.S3Objects.Where(s=> IsValidVideo(s)));
                 //Console.WriteLine(string.Format("Current size {0}", deviceFiles.Count));
+                Console.SetCursorPosition(0, Console.CursorTop-1);
+                Console.WriteLine(string.Format("Found matching video fragments: {0}           ", deviceFiles.Count));
 
                 if(!resp.IsTruncated)
                 {
@@ -285,7 +287,7 @@ namespace ConsoleApplication
                 }
                 continuationToken = resp.NextContinuationToken;
             }
-            Console.WriteLine(string.Format("Found {0} matching video fragments.", deviceFiles.Count));
+
 
             return deviceFiles;
         }
