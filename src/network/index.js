@@ -126,6 +126,7 @@ const IP_FORWARDING_PATH = '/proc/sys/net/ipv4/ip_forward'
     .then(() => executeAddCameraForwardPort(80))
     .then(() => executeAddCameraForwardPort(554))
     .then(() => executeAddCameraForwardPort(8091))
+    .then(() => executeAddCameraForwardPort(3702)) // ONVIF
     .then(() => executeAddReturnMasquerade())
     .done(function () {
       logger.info('successfully created proxy chain')
