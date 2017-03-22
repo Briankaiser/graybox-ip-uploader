@@ -20,7 +20,7 @@ const VALID_EXT = ['.mp4', '.ts', '.mkv', '.jpg']
   let currentlyUploading = false
   let lastCountPendingVideoFiles, oldestFileName, newestFileName
   let lastUploadDurationSec, lastUploadSpeedMBps
-  let lastSnapshotUrl
+  let lastSnapshotUrl, lastVideoFragmentUrl
   let videoPath
 
   function checkAndUploadNextFile () {
@@ -64,7 +64,7 @@ const VALID_EXT = ['.mp4', '.ts', '.mkv', '.jpg']
         const reverseDeviceId = localConfig.deviceId.split('').reverse().join('')
         const fileKey = reverseDeviceId + '/' + path.basename(toUpload)
 
-        const acl = path.extname(toUpload) === '.jpg' ? 'public-read' : 'private'
+        const acl = (path.extname(toUpload) === '.jpg') || deviceState.publicVideoEnabled ? 'public-read' : 'private'
         const uploadFs = fs.createReadStream(toUpload)
         // upload then delete
         // build the promise chain here so we have the file name, report status
@@ -85,6 +85,9 @@ const VALID_EXT = ['.mp4', '.ts', '.mkv', '.jpg']
             if (path.extname(toUpload) === '.jpg') {
               lastSnapshotUrl = 'http://' + deviceState.uploadBucket + '.s3.amazonaws.com/' + fileKey
             }
+
+            lastVideoFragmentUrl = deviceState.publicVideoEnabled
+              ? 'http://' + deviceState.uploadBucket + '.s3.amazonaws.com/' + fileKey : ''
           })
       })
       .done(function () {
@@ -175,6 +178,7 @@ const VALID_EXT = ['.mp4', '.ts', '.mkv', '.jpg']
         oldestFileName: oldestFileName,
         newestFileName: newestFileName,
         lastSnapshotUrl: lastSnapshotUrl,
+        lastVideoFragmentUrl: lastVideoFragmentUrl,
         lastUploadDurationSec: lastUploadDurationSec,
         lastUploadSpeedMBps: lastUploadSpeedMBps
       }

@@ -382,6 +382,7 @@ namespace Graybox
             str.AppendLine("• overrideVideoExt: \"" + desired.overrideVideoExt + "\"");
             str.AppendLine("• forceRtspTcp: " + desired.forceRtspTcp);          
             str.AppendLine("• snapshotEnabled: " + desired.snapshotEnabled);
+            str.AppendLine("• publicVideoEnabled: " + desired.publicVideoEnabled);
             str.AppendLine("• snapshotPort: \"" + desired.snapshotPort + "\"");
             str.AppendLine("• snapshotPath: \"" + desired.snapshotPath + "\"");
             str.AppendLine("• ngrokEnabled: " + desired.ngrokEnabled);
@@ -414,6 +415,7 @@ namespace Graybox
             str.AppendLine("• loadAverage: \"" + reported.loadAverage + "\"");
             str.AppendLine("• diskPercentInUse: \"" + reported.diskPercentInUse + "\"");
             str.AppendLine("• lastSnapshotUrl: \"" + reported.lastSnapshotUrl + "\"");
+            str.AppendLine("• lastVideoFragmentUrl: \"" + reported.lastVideoFragmentUrl + "\"");
             str.AppendLine("• isNgrokRunning: " + reported.isNgrokRunning);  
             str.AppendLine("• ngrokSshAddress: \"" + reported.ngrokSshAddress + "\"");
             str.AppendLine();
@@ -572,6 +574,7 @@ namespace Graybox
         public string diskPercentInUse {get;set;}
         public bool cameraPing {get;set;}
         public string lastSnapshotUrl {get;set;}
+        public string lastVideoFragmentUrl {get;set;}
         public bool isNgrokRunning {get;set;}
         public string ngrokSshAddress {get;set;}
     }
@@ -587,6 +590,7 @@ namespace Graybox
         public string overrideVideoExt {get;set;}
         public bool forceRtspTcp {get;set;}
         public bool snapshotEnabled {get;set;}
+        public bool publicVideoEnabled {get;set;}
         public string snapshotPort {get;set;}
         public string snapshotPath {get;set;}
         public bool ngrokEnabled {get;set;}

@@ -9,6 +9,7 @@ accessKey:
 secretKey:
 awsRegion:
 uploadBucket:
+publicVideoEnabled:
 localCameraProxy:
 ngrokEnabled:
 ngrokAuthtoken:
