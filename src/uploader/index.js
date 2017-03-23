@@ -75,7 +75,7 @@ const VALID_EXT = ['.mp4', '.ts', '.mkv', '.jpg']
         }).promise()
           .then(() => {
             lastUploadDurationSec = (new Date().getTime() - uploadStartTime) / 1000.0
-            lastUploadSpeedMBps = ((uploadFs.bytesRead / 1024 / 1024) / lastUploadDurationSec).toFixed(2)
+            // lastUploadSpeedMBps = ((uploadFs.bytesRead / 1024 / 1024) / lastUploadDurationSec).toFixed(2)
             return unlinkAsync(toUpload)
           }) // delete file on successful upload
           .then(() => {
@@ -113,9 +113,9 @@ const VALID_EXT = ['.mp4', '.ts', '.mkv', '.jpg']
     } catch (error) {
       currentlyUploading = false
     } finally {
-      if (uploadFs) {
-        uploadFs.destroy() // make sure to clean up any streams
-      }
+      // if (uploadFs) {
+      //   uploadFs.destroy() // make sure to clean up any streams
+      // }
     }
   }
 
