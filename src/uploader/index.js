@@ -38,7 +38,7 @@ const VALID_EXT = ['.mp4', '.ts', '.mkv', '.jpg']
       readDirAsync(videoPath).then(function (files) {
         if (_.isEmpty(files)) return
         const curDate = new Date()
-        var toUploadList = _.chain(files)
+        const toUploadList = _.chain(files)
             .map(function (f) {
               let fp = path.join(videoPath, f)
               return {filename: fp, stat: fs.statSync(fp)}
@@ -78,12 +78,16 @@ const VALID_EXT = ['.mp4', '.ts', '.mkv', '.jpg']
           .then(() => {
             lastUploadDurationSec = (new Date().getTime() - uploadStartTime) / 1000.0
             lastUploadSpeedMBps = ((uploadFs.bytesRead / 1024 / 1024) / lastUploadDurationSec).toFixed(2)
+            uploadFs.destroy()
             return unlinkAsync(toUpload)
           }) // delete file on successful upload
           .then(() => {
             logger.debug(toUpload, 'successfully uploaded and deleted with MBps: ', lastUploadDurationSec)
+            // record the jpg path for an uploaded image
             if (path.extname(toUpload) === '.jpg') {
               lastSnapshotUrl = 'http://' + deviceState.uploadBucket + '.s3.amazonaws.com/' + fileKey
+            } else if (!deviceState.snapshotEnabled) { // if snapshot off - clear it to save transfer
+              lastSnapshotUrl = ''
             }
 
             lastVideoFragmentUrl = deviceState.publicVideoEnabled
@@ -122,7 +126,7 @@ const VALID_EXT = ['.mp4', '.ts', '.mkv', '.jpg']
       region: deviceState.awsRegion,
       accessKeyId: deviceState.accessKey,
       secretAccessKey: deviceState.secretKey,
-      computeChecksums: true,
+      // computeChecksums: true,
       correctClockSkew: true,
       logger: logger
     })
