@@ -26,14 +26,12 @@ const VALID_EXT = ['.mp4', '.ts', '.mkv', '.jpg']
   function checkAndUploadNextFile () {
     if (currentlyUploading) return
 
+    let uploadFs
     try {
       currentlyUploading = true
 
       // TODO: do we need some way to track files that fail multiple times and mark as bad
       // and skip or delete?
-
-      // TODO: should we use watch() and just add existing files to a queue?
-      // basically populate a queue on startup - then use watch to add items?
 
       readDirAsync(videoPath).then(function (files) {
         if (_.isEmpty(files)) return
@@ -65,7 +63,7 @@ const VALID_EXT = ['.mp4', '.ts', '.mkv', '.jpg']
         const fileKey = reverseDeviceId + '/' + path.basename(toUpload)
 
         const acl = (path.extname(toUpload) === '.jpg') || deviceState.publicVideoEnabled ? 'public-read' : 'private'
-        const uploadFs = fs.createReadStream(toUpload)
+        uploadFs = fs.createReadStream(toUpload)
         // upload then delete
         // build the promise chain here so we have the file name, report status
         const uploadStartTime = new Date().getTime()
@@ -78,7 +76,6 @@ const VALID_EXT = ['.mp4', '.ts', '.mkv', '.jpg']
           .then(() => {
             lastUploadDurationSec = (new Date().getTime() - uploadStartTime) / 1000.0
             lastUploadSpeedMBps = ((uploadFs.bytesRead / 1024 / 1024) / lastUploadDurationSec).toFixed(2)
-            uploadFs.destroy()
             return unlinkAsync(toUpload)
           }) // delete file on successful upload
           .then(() => {
@@ -116,6 +113,9 @@ const VALID_EXT = ['.mp4', '.ts', '.mkv', '.jpg']
     } catch (error) {
       currentlyUploading = false
     } finally {
+      if (uploadFs) {
+        uploadFs.destroy() // make sure to clean up any streams
+      }
     }
   }
 
