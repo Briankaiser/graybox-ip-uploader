@@ -15,7 +15,7 @@ const VALID_EXT = ['.mp4', '.ts', '.mkv', '.jpg']
   let localConfig = {}
   let deviceState = {}
   let logger
-  let s3Service
+  // let s3Service
   let uploaderInterval
   let currentlyUploading = false
   let lastCountPendingVideoFiles, oldestFileName, newestFileName
@@ -63,9 +63,19 @@ const VALID_EXT = ['.mp4', '.ts', '.mkv', '.jpg']
         const fileKey = reverseDeviceId + '/' + path.basename(toUpload)
 
         const acl = (path.extname(toUpload) === '.jpg') || deviceState.publicVideoEnabled ? 'public-read' : 'private'
+        // const fileSize = fs.statSync(toUpload).size
         uploadFs = fs.createReadStream(toUpload)
         // upload then delete
         // build the promise chain here so we have the file name, report status
+        let s3Service = new S3({
+          region: deviceState.awsRegion,
+          accessKeyId: deviceState.accessKey,
+          secretAccessKey: deviceState.secretKey,
+          // computeChecksums: true,
+          correctClockSkew: true,
+          logger: logger
+        })
+
         const uploadStartTime = new Date().getTime()
         return s3Service.upload({
           Bucket: deviceState.uploadBucket,
@@ -75,7 +85,7 @@ const VALID_EXT = ['.mp4', '.ts', '.mkv', '.jpg']
         }).promise()
           .then(() => {
             lastUploadDurationSec = (new Date().getTime() - uploadStartTime) / 1000.0
-            // lastUploadSpeedMBps = ((uploadFs.bytesRead / 1024 / 1024) / lastUploadDurationSec).toFixed(2)
+            lastUploadSpeedMBps = ((uploadFs.bytesRead / 1024 / 1024) / lastUploadDurationSec).toFixed(2)
             return unlinkAsync(toUpload)
           }) // delete file on successful upload
           .then(() => {
@@ -113,23 +123,14 @@ const VALID_EXT = ['.mp4', '.ts', '.mkv', '.jpg']
     } catch (error) {
       currentlyUploading = false
     } finally {
-      // if (uploadFs) {
-      //   uploadFs.destroy() // make sure to clean up any streams
-      // }
+
     }
   }
 
   function initUploader () {
     logger.info('Initializing uploader')
     // TODO: verify data. we need awsRegion, uploadBucket, accessKey, secretKey
-    s3Service = new S3({
-      region: deviceState.awsRegion,
-      accessKeyId: deviceState.accessKey,
-      secretAccessKey: deviceState.secretKey,
-      // computeChecksums: true,
-      correctClockSkew: true,
-      logger: logger
-    })
+
 
     if (uploaderInterval) {
       clearInterval(uploaderInterval)
