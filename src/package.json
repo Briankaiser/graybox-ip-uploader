@@ -19,6 +19,8 @@
     "fluent-ffmpeg": "^2.1.0",
     "js-yaml": "^3.7.0",
     "lodash": "^4.17.4",
+    "heapdump": "^0.3.7",
+    "memwatch-next": "^0.3.0",
     "mkdirp": "^0.5.1",
     "moment": "^2.17.1",
     "ngrok": "^2.2.6",

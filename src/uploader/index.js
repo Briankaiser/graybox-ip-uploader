@@ -4,6 +4,9 @@ const fs = require('fs')
 const deferred = require('deferred')
 const S3 = require('aws-sdk/clients/s3')
 const _ = require('lodash')
+// const memwatch = require('memwatch-next')
+// const heapdump = require('heapdump')
+var https = require('https')
 
 const promisify = deferred.promisify
 const readDirAsync = promisify(fs.readdir)
@@ -15,13 +18,15 @@ const VALID_EXT = ['.mp4', '.ts', '.mkv', '.jpg']
   let localConfig = {}
   let deviceState = {}
   let logger
-  // let s3Service
+  let s3Service, httpsAgent
   let uploaderInterval
   let currentlyUploading = false
   let lastCountPendingVideoFiles, oldestFileName, newestFileName
   let lastUploadDurationSec, lastUploadSpeedMBps
   let lastSnapshotUrl, lastVideoFragmentUrl
   let videoPath
+  
+  // let hd
 
   function checkAndUploadNextFile () {
     if (currentlyUploading) return
@@ -67,14 +72,6 @@ const VALID_EXT = ['.mp4', '.ts', '.mkv', '.jpg']
         uploadFs = fs.createReadStream(toUpload)
         // upload then delete
         // build the promise chain here so we have the file name, report status
-        let s3Service = new S3({
-          region: deviceState.awsRegion,
-          accessKeyId: deviceState.accessKey,
-          secretAccessKey: deviceState.secretKey,
-          // computeChecksums: true,
-          correctClockSkew: true,
-          logger: logger
-        })
 
         const uploadStartTime = new Date().getTime()
         return s3Service.upload({
@@ -130,7 +127,23 @@ const VALID_EXT = ['.mp4', '.ts', '.mkv', '.jpg']
   function initUploader () {
     logger.info('Initializing uploader')
     // TODO: verify data. we need awsRegion, uploadBucket, accessKey, secretKey
-
+    if (httpsAgent) {
+      httpsAgent.destroy()
+    }
+    httpsAgent = new https.Agent({
+      maxSockets: 10
+    })
+    s3Service = new S3({
+      region: deviceState.awsRegion,
+      accessKeyId: deviceState.accessKey,
+      secretAccessKey: deviceState.secretKey,
+      // computeChecksums: true,
+      correctClockSkew: true,
+      logger: logger,
+      httpOptions: {
+        agent: httpsAgent
+      }
+    })
 
     if (uploaderInterval) {
       clearInterval(uploaderInterval)
@@ -156,7 +169,22 @@ const VALID_EXT = ['.mp4', '.ts', '.mkv', '.jpg']
       }]
     })
     videoPath = path.join(localConfig.tmpDirectory, '/video/')
+    https.globalAgent.maxSockets = 10
 
+    // memwatch.setup()
+    // memwatch.on('leak', function (info) {
+    //   console.error('leak info', info)
+    //   heapdump.writeSnapshot(function (err, filename) {
+    //     console.log('dumped heap', filename)
+    //   })
+    //   if (!hd) {
+    //     hd = new memwatch.HeapDiff()
+    //   } else {
+    //     var diff = hd.end()
+    //     console.error('heap diff', diff)
+    //     hd = null
+    //   }
+    // })
     // now wait for deviceState so we can construct the uploader
   }
 
