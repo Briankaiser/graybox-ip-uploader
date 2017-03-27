@@ -145,7 +145,7 @@ const writeFileAsync = promisify(fs.writeFile)
       },
       {
         stream: process.stdout,
-        level: 'debug'
+        level: 'info'
       }]
     })
 

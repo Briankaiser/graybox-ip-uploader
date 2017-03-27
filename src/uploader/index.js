@@ -165,7 +165,7 @@ const VALID_EXT = ['.mp4', '.ts', '.mkv', '.jpg']
       },
       {
         stream: process.stdout,
-        level: 'debug'
+        level: 'info'
       }]
     })
     videoPath = path.join(localConfig.tmpDirectory, '/video/')
