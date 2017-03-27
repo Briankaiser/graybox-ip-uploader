@@ -21,6 +21,8 @@ const SCHEDULE_CHECK_INTERVAL = 10 * 1000
   let scheduledRecordingActive
   let scheduledRecordingsInterval
 
+  let lastFrame, potentialStallCount
+
   process.on('exit', function () {
     if (ffmpegProcess) {
       ignoreNextError = true
@@ -57,6 +59,7 @@ const SCHEDULE_CHECK_INTERVAL = 10 * 1000
     }
     const outputFile = path.join(localConfig.tmpDirectory, '/video/', 'output%Y-%m-%d_%H-%M-%S' + videoExt)
     const inputFile = getInput(localConfig, deviceState)
+    potentialStallCount = 0
     ignoreNextError = false
     let inputOptions = [
       '-buffer_size 2M',
@@ -114,6 +117,25 @@ const SCHEDULE_CHECK_INTERVAL = 10 * 1000
                           output: outputFile,
                           commandLine: commandLine
                         }, 'ffmpeg started.')
+                      })
+                      .on('progress', function (progress) {
+                        if (lastFrame === progress.frames) {
+                          potentialStallCount++
+                          logger.warn('potential ffmpeg stall detected', progress)
+                        } else {
+                          potentialStallCount = 0
+                        }
+
+                        if (potentialStallCount >= 5) {
+                          logger.error('terminating ffmpeg due to continued frame stall')
+                          ffmpegProcess.kill()
+                          ffmpegProcess = null
+                          setTimeout(function () {
+                            startEncoder()
+                          }, 1000)
+                        }
+
+                        lastFrame = progress.frames
                       })
                       .on('error', function (err, stdout, stderr) {
                         // if graceful exit (ie remote encoder stop)
