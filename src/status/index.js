@@ -111,11 +111,17 @@ const IP_LOOKUP_URL = 'http://whatismyip.akamai.com/'
         childProcess.execFile('df', ['-h', videoPath], {
           timeout: 2000
         }, function (err, stdout, stderr) {
-          if (err) {
+          if (err || !stdout) {
             logger.warn('failed to get disk space', videoPath)
+            callback(null)
             return
           }
+
           const lines = stdout.split('\n')
+          if (lines.count < 2) {
+            callback(null)
+            return
+          }
           const data = lines[1].split(' ')
           // ex. [ '/dev/root', '30G', '2.5G', '26G', '9%', '/' ]
           const filteredData = _.reject(data, _.isEmpty)

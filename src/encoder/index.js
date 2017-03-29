@@ -126,10 +126,14 @@ const SCHEDULE_CHECK_INTERVAL = 10 * 1000
                           potentialStallCount = 0
                         }
 
-                        if (potentialStallCount >= 5) {
+                        if (potentialStallCount >= 10) {
                           logger.error('terminating ffmpeg due to continued frame stall')
-                          ffmpegProcess.kill()
-                          ffmpegProcess = null
+                          if (ffmpegProcess) {
+                            ignoreNextError = true
+                            ffmpegProcess.kill()
+                            ffmpegProcess = null
+                          }
+
                           setTimeout(function () {
                             startEncoder()
                           }, 1000)
