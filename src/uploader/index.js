@@ -13,7 +13,8 @@ const readDirAsync = promisify(fs.readdir)
 const unlinkAsync = promisify(fs.unlink)
 
 const VALID_EXT = ['.mp4', '.ts', '.mkv', '.jpg']
-const RE_INIT_UPLOAD_MAX = 100
+// const RE_INIT_UPLOAD_MAX = 100
+const RESTART_PROCESS_MAX = 2000
 
 ;(function () {
   let localConfig = {}
@@ -28,8 +29,6 @@ const RE_INIT_UPLOAD_MAX = 100
   let videoPath
   let httpsAgent
   let uploadCountSinceReInit
-  
-  // let hd
 
   function checkAndUploadNextFile () {
     if (currentlyUploading) return
@@ -76,8 +75,17 @@ const RE_INIT_UPLOAD_MAX = 100
         // upload then delete
         // build the promise chain here so we have the file name, report status
 
-        if (uploadCountSinceReInit++ > RE_INIT_UPLOAD_MAX) {
-          initS3Service()
+        // this doesn't seem to matter. keeping it in here in case I need it again
+        // if (uploadCountSinceReInit++ > RE_INIT_UPLOAD_MAX) {
+        //   initS3Service()
+        // }
+
+        // I hate this but i can't find the mem leak. so we will just restart the process
+        // every once in a while
+        if (uploadCountSinceReInit++ > RESTART_PROCESS_MAX) {
+          logger.info('restarting uploader to relieve mem pressure')
+          process.exit(0)
+          return
         }
 
         const uploadStartTime = new Date().getTime()
@@ -90,8 +98,7 @@ const RE_INIT_UPLOAD_MAX = 100
           .then(() => {
             lastUploadDurationSec = (new Date().getTime() - uploadStartTime) / 1000.0
             lastUploadSpeedMBps = ((uploadFs.bytesRead / 1024 / 1024) / lastUploadDurationSec).toFixed(2)
-            uploadFs.destroy()
-            
+
             return unlinkAsync(toUpload)
           }) // delete file on successful upload
           .then(() => {
@@ -109,7 +116,6 @@ const RE_INIT_UPLOAD_MAX = 100
       })
       .done(function () {
         currentlyUploading = false
-        uploadFs = null
       }, function (err) {
         if (err.code === 'EBUSY') {
           logger.debug(err, 'file is still busy. will retry')
@@ -122,7 +128,6 @@ const RE_INIT_UPLOAD_MAX = 100
           logger.warn(err)
         }
         currentlyUploading = false
-        uploadFs = null
       })
       // find all available files to upload
       // upload the oldest one

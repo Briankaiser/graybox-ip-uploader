@@ -143,7 +143,9 @@ const localConfigReader = require('./local-config-reader')
     // on failure - restart
     process.on('exit', function (exitCode, signal) {
       _.pull(childProcesses, process)
-
+      // if we had a graceful exit then try to restart quick
+      // if an exception than wait a little longer
+      const restartWaitTime = exitCode === 0 ? 1000 : 10000
       // wait 10s and restart
       setTimeout(function () {
         logger.info({processPath: processPath}, 'restarting process')
@@ -156,7 +158,7 @@ const localConfigReader = require('./local-config-reader')
             type: 'RebroadcastRequest'
           })
         }
-      }, 10000)
+      }, restartWaitTime)
     })
     childProcesses.push(process)
     sendInitToProcess(process, localConfig)
