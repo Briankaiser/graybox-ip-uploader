@@ -137,7 +137,7 @@ const localConfigReader = require('./local-config-reader')
   }
   function spawnRestartableProcess (processPath, messageHandler) {
     let process = childProcessDebug.fork(processPath, {
-      execArgv: ['--max-old-space-size=64']    // each child only gets 64Mb because sharing is caring. and Pis have low mem
+      execArgv: ['--max-old-space-size=50']    // each child only gets 64Mb because sharing is caring. and Pis have low mem
     })
     process.on('message', messageHandler)
     // on failure - restart

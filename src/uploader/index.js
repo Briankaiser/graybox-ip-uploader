@@ -90,6 +90,8 @@ const RE_INIT_UPLOAD_MAX = 100
           .then(() => {
             lastUploadDurationSec = (new Date().getTime() - uploadStartTime) / 1000.0
             lastUploadSpeedMBps = ((uploadFs.bytesRead / 1024 / 1024) / lastUploadDurationSec).toFixed(2)
+            uploadFs.destroy()
+            
             return unlinkAsync(toUpload)
           }) // delete file on successful upload
           .then(() => {
@@ -107,6 +109,7 @@ const RE_INIT_UPLOAD_MAX = 100
       })
       .done(function () {
         currentlyUploading = false
+        uploadFs = null
       }, function (err) {
         if (err.code === 'EBUSY') {
           logger.debug(err, 'file is still busy. will retry')
@@ -119,6 +122,7 @@ const RE_INIT_UPLOAD_MAX = 100
           logger.warn(err)
         }
         currentlyUploading = false
+        uploadFs = null
       })
       // find all available files to upload
       // upload the oldest one
@@ -163,7 +167,7 @@ const RE_INIT_UPLOAD_MAX = 100
       secretAccessKey: deviceState.secretKey,
       // computeChecksums: true,
       correctClockSkew: true,
-      logger: logger,
+      // logger: logger,
       httpOptions: {
         timeout: 2000,
         agent: httpsAgent
