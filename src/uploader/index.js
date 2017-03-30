@@ -4,6 +4,7 @@ const fs = require('fs')
 const deferred = require('deferred')
 const S3 = require('aws-sdk/clients/s3')
 const _ = require('lodash')
+var https = require('https')
 // const memwatch = require('memwatch-next')
 // const heapdump = require('heapdump')
 
@@ -12,6 +13,7 @@ const readDirAsync = promisify(fs.readdir)
 const unlinkAsync = promisify(fs.unlink)
 
 const VALID_EXT = ['.mp4', '.ts', '.mkv', '.jpg']
+const RE_INIT_UPLOAD_MAX = 100
 
 ;(function () {
   let localConfig = {}
@@ -24,6 +26,8 @@ const VALID_EXT = ['.mp4', '.ts', '.mkv', '.jpg']
   let lastUploadDurationSec, lastUploadSpeedMBps
   let lastSnapshotUrl, lastVideoFragmentUrl
   let videoPath
+  let httpsAgent
+  let uploadCountSinceReInit
   
   // let hd
 
@@ -71,6 +75,10 @@ const VALID_EXT = ['.mp4', '.ts', '.mkv', '.jpg']
         uploadFs = fs.createReadStream(toUpload)
         // upload then delete
         // build the promise chain here so we have the file name, report status
+
+        if (uploadCountSinceReInit++ > RE_INIT_UPLOAD_MAX) {
+          initS3Service()
+        }
 
         const uploadStartTime = new Date().getTime()
         return s3Service.upload({
@@ -127,19 +135,40 @@ const VALID_EXT = ['.mp4', '.ts', '.mkv', '.jpg']
     logger.info('Initializing uploader')
     // TODO: verify data. we need awsRegion, uploadBucket, accessKey, secretKey
 
+    initS3Service()
+
+    if (uploaderInterval) {
+      clearInterval(uploaderInterval)
+    }
+    uploaderInterval = setInterval(checkAndUploadNextFile, 2000)
+  }
+  function initS3Service () {
+    logger.info('init s3 service')
+    uploadCountSinceReInit = 0
+    
+    if (httpsAgent) {
+      httpsAgent.destroy()
+      httpsAgent = null
+    }
+
+    httpsAgent = new https.Agent({
+      rejectUnauthorized: true,
+      maxSockets: 20,
+      keepAlive: true,
+      maxFreeSockets: 20
+    })
     s3Service = new S3({
       region: deviceState.awsRegion,
       accessKeyId: deviceState.accessKey,
       secretAccessKey: deviceState.secretKey,
       // computeChecksums: true,
       correctClockSkew: true,
-      logger: logger
+      logger: logger,
+      httpOptions: {
+        timeout: 2000,
+        agent: httpsAgent
+      }
     })
-
-    if (uploaderInterval) {
-      clearInterval(uploaderInterval)
-    }
-    uploaderInterval = setInterval(checkAndUploadNextFile, 2000)
   }
 
   function init (config) {
