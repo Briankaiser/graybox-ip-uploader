@@ -174,7 +174,7 @@ const RESTART_PROCESS_MAX = 2000
       correctClockSkew: true,
       // logger: logger,
       httpOptions: {
-        timeout: 2000,
+        timeout: 5000,
         agent: httpsAgent
       }
     })
