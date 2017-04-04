@@ -170,8 +170,7 @@ const IP_FORWARDING_PATH = '/proc/sys/net/ipv4/ip_forward'
       addr: 22,
       authtoken: deviceState.ngrokAuthtoken,
       region: ngrokRegion,
-      bind_tls: false,
-      inspect: false
+      bind_tls: false
     }, function (err, url) {
       ngrokStarting = false
       if (err) {

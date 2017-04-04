@@ -62,7 +62,8 @@ const SCHEDULE_CHECK_INTERVAL = 10 * 1000
     potentialStallCount = 0
     ignoreNextError = false
     let inputOptions = [
-      '-buffer_size 2M',
+      '-buffer_size 4M',
+      '-rtbufsize 4M',
       '-reorder_queue_size 64',
       '-stimeout 5000000', // (socket timeout) in microseconds
       '-thread_queue_size 1024'
