@@ -193,7 +193,7 @@ const IP_FORWARDING_PATH = '/proc/sys/net/ipv4/ip_forward'
     })
   }
   function turnNgrokOff () {
-    ngrok.disconnect()
+    ngrok.kill()
     ngrokRunning = false
     ngrokStarting = false
     ngrokSshAddress = ''
