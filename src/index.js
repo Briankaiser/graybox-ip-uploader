@@ -8,6 +8,7 @@ const localConfigReader = require('./local-config-reader')
   let childProcesses = []
   let localConfig
   let logger
+  let restartAwkTimeoutInterval, pendingRestartProcess
 
   process.on('exit', function () {
     if (childProcesses) {
@@ -85,8 +86,21 @@ const localConfigReader = require('./local-config-reader')
       ProcessStatusUpdate(msg)
       return
     }
+
+    // if we are waiting to restart a process and we get a successful 'awk'
+    if (pendingRestartProcess && msg.type === 'DeviceUpdateAwknowledged') {
+      triggerProcessRestart(childProcesses, pendingRestartProcess)
+      return
+    }
+
     // if new device state - broadcast it to everyone
     if (msg.type === 'DeviceStateChanged') {
+      // if a process restart is requested and we aren't already doing one
+      if (!_.isEmpty(msg.payload.processToRestart) && !pendingRestartProcess) {
+        startRestartSequence(msg.payload.processToRestart)
+        msg.payload.processToRestart = null // clear this out before other processes see it
+      }
+
       _.each(childProcesses, function (cp) {
         if (!cp.connected) return
         cp.send({
@@ -108,6 +122,48 @@ const localConfigReader = require('./local-config-reader')
       ProcessStatusUpdate(msg)
       return
     }
+  }
+  function startRestartSequence (processToRestart) {
+    const iotProcess = FindChildProcess(childProcesses, 'iot')
+    if (!iotProcess) {
+      logger.err('critical error. iot process not running. cant restart. restarting everything')
+      process.exit(0)
+      return
+    }
+    logger.info('starting restart sequence for: ' + processToRestart)
+    // temp store value
+    pendingRestartProcess = processToRestart
+    // start a timeout handler
+    restartAwkTimeoutInterval = setTimeout(resetRestartSequence, 30000)
+
+    // awk (by removing) the restart request
+    iotProcess.send({
+      type: 'RequestDeviceStateChange',
+      payload: {
+        processToRestart: null
+      }
+    })
+    // then we need to wait for it to be awknowledged by the server
+  }
+  function triggerProcessRestart (processes, processToRestart) {
+    // clear timeout
+    resetRestartSequence()
+    logger.info('triggering restart for: ' + processToRestart)
+    // then perform the necessary restart(s)
+    if (processToRestart === 'main') {
+      process.exit(0)
+    } else {
+      const p = FindChildProcess(processes, processToRestart)
+      if (p) {
+        p.kill()
+      }
+    }
+  }
+
+  function resetRestartSequence () {
+    pendingRestartProcess = null
+    clearTimeout(restartAwkTimeoutInterval)
+    restartAwkTimeoutInterval = null
   }
 
   function sendInitToProcess (cp, config) {

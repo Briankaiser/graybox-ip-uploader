@@ -388,6 +388,7 @@ namespace Graybox
             str.AppendLine("• ngrokEnabled: " + desired.ngrokEnabled);
             str.AppendLine("• ngrokAuthtoken: \"" + desired.ngrokAuthtoken + "\"");
             str.AppendLine("• firewallEnabled: " + desired.firewallEnabled);
+            str.AppendLine("• processToRestart: \"" + desired.processToRestart + "\"");
             str.AppendLine("• scheduledRecordings: " + ((desired.scheduledRecordings == null || desired.scheduledRecordings.Count == 0) ? "none":""));
             if(desired.scheduledRecordings != null)
             {
@@ -597,6 +598,7 @@ namespace Graybox
         public string ngrokAuthtoken {get;set;}
         public string firewallEnabled {get;set;}
         public List<ScheduledRecording> scheduledRecordings {get;set;}
+        public string processToRestart {get;set;}
 
     }
     internal class ScheduledRecording

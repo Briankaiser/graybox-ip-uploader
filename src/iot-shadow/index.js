@@ -70,6 +70,10 @@ const writeFileAsync = promisify(fs.writeFile)
       if (clientToken === lastUpdateClientToken) {
         lastUpdateClientToken = null
         logger.debug('update request successful', clientToken)
+        process.send({
+          type: 'DeviceUpdateAwknowledged',
+          payload: null
+        })
         return
       }
       logger.debug('awsstatus', thingName, statusType, clientToken, stateObject)

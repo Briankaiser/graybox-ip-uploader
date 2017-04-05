@@ -17,4 +17,5 @@ forceRtspTcp:
 audioFromCameraEnabled:
 overrideVideoExt:
 firewallEnabled:
+processToRestart:
 scheduledRecordings:
